@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test CGI</title>
+</head>
+<body>
+    <h1>Page de test CGI</h1>
+    <p>Test de l'exécution des scripts CGI pour obtenir la météo d'une ville.</p>
+    
+    <!-- Formulaire pour une ville spécifique -->
+    <form action="cgi.py" method="post">
+        <label for="city">Ville :</label>
+        <input type="text" id="city" name="city"><br><br>
+        <input type="submit" value="Obtenir la Météo">
+    </form>
+    
+    <br>
+
+    <!-- Bouton pour une ville aléatoire -->
+    <a href="cgi.py" method="get">Ville Aléatoire</a>
+</body>
+</html>
+

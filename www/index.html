@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil - Webserv</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        h1 {
+            color: #333;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin: 10px 0;
+        }
+        a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        a:hover {
+            color: #0056b3;
+        }
+		.link-box {
+				border: 1px solid #ddd;
+				border-radius: 8px;
+				padding: 20px;
+				text-align: center;
+				margin-bottom: 20px;
+				transition: box-shadow 0.3s;
+			}
+			.link-box:hover {
+				box-shadow: 0 0 15px rgba(0,0,0,0.2);
+				cursor : pointer;
+			}
+			.link-box img {
+				max-width: 100%;
+				height: auto;
+				border-radius: 4px;
+			}
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Webserv - Serveur HTTP</h1>
+        <p>Ce serveur est implémenté en C++ 98 conformément aux spécifications du projet.</p>
+		<a href="download">
+        <div class="link-box">
+                <img src="404.png" alt="Téléchargement">
+                <p>Téléchargement</p>
+        </div>
+		</a>
+		<a href="form">
+        <div class="link-box">
+                <img src="path/to/form-image.jpg" alt="Formulaire">
+                <p>Formulaire</p>
+        </div>
+		</a>
+		<a href="cgi-test">
+        <div class="link-box">
+                <img src="path/to/cgi-test-image.jpg" alt="Test CGI">
+                <p>CGI</p>
+        </div>
+		</a>
+		<a href="upload">
+		<div class="link-box">
+				<img src="path/to/upload-image.jpg" alt="Upload">
+				<p>Upload</p>
+		</div>
+    </div>
+</body>
+</html>
