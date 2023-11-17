@@ -12,18 +12,16 @@
 
 #include "server/Server.hpp"
 
-int main()
-{
-	try{
-		Config *config = new Config("config/default.conf");
-		std::cout << *config << std::endl;
-		Server *server = new Server(*config);
-		server->start();
-		delete server;
-		delete config;
-	}
-	catch(const std::exception& e){
-		std::cerr << e.what() << '\n';
-	}
-	return (0);
+int main() {
+  try {
+    Config *config = new Config("config/default.conf");
+    std::cout << *config << std::endl;
+    Server *server = new Server(*config);
+    server->start();
+    delete server;
+    delete config;
+  } catch (const std::exception &e) {
+    std::cerr << e.what() << '\n';
+  }
+  return (0);
 }

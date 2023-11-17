@@ -13,36 +13,36 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-# include "../config/Config.hpp"
-# include "../request/Request.hpp"
-# include "../response/Response.hpp"
-# include "../routes/Routes.hpp"
+#include "../config/Config.hpp"
+#include "../request/Request.hpp"
+#include "../response/Response.hpp"
+#include "../routes/Routes.hpp"
 
 class Server {
-    public:
-        Server(Config const & config);
-        ~Server();
-        void start();
-        void stop();
+public:
+  Server(Config const &config);
+  ~Server();
+  void start();
+  void stop();
 
-    private:
-        Config _config;
-        Routes _routes;
-        // int _listen_fd;
-        std::vector<int> _listen_fds;
-        bool _isRunning;
-        // struct sockaddr_in _server_addr;
-        fd_set _readfds;
-        std::vector<int> _clients;
-        std::set<int> _clientsToClose;
-        
-        void _sendResponse(Response const & response, int const &client);
-        void _initialize();
-        // void _manageConnections();
-        void _processClientRequest(int client_fd);
-        void _acceptNewConnection(int listen_fd);
-        void _handleRequests();
-        void _prepareSocketSet(int &max_fd);
+private:
+  Config _config;
+  Routes _routes;
+  // int _listen_fd;
+  std::vector<int> _listen_fds;
+  bool _isRunning;
+  // struct sockaddr_in _server_addr;
+  fd_set _readfds;
+  std::vector<int> _clients;
+  std::set<int> _clientsToClose;
+
+  void _sendResponse(Response const &response, int const &client);
+  void _initialize();
+  // void _manageConnections();
+  void _processClientRequest(int client_fd);
+  void _acceptNewConnection(int listen_fd);
+  void _handleRequests();
+  void _prepareSocketSet(int &max_fd);
 };
 
 #endif // SERVER_HPP
