@@ -6,18 +6,28 @@
 /*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:17:41 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/15 16:57:31 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/17 18:56:37 by gregoire         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef INCLUDE_HPP
 #define INCLUDE_HPP
 
-#include <iostream>
-#include <cstring>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
+# include <iostream>
+# include <cstring>
+# include <string>
+# include <vector>
+# include <map>
+# include <set>
+# include <sstream>
+# include <fstream>
+# include <sys/types.h>
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
+# include <unistd.h>
+# include <sys/types.h>
+# include <sys/stat.h>
 const std::string RED = "\033[31m";
 const std::string GREEN = "\033[32m";
 const std::string YELLOW = "\033[33m";

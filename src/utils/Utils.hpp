@@ -2,19 +2,8 @@
 # define UTILS_HPP
 
 # include "../../include/webserv.hpp"
-# include <string>
-# include <sstream>
 # include "../request/Request.hpp"
 # include "../response/Response.hpp"
-# include <dirent.h>
-# include <fstream>
-# include <sys/types.h>
-# include <sys/stat.h>
-#include <fstream>
-# include <dirent.h>
-#include <string>
-#include <sstream>
-#include <sys/types.h>
 
 
 class Utils

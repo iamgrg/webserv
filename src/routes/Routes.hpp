@@ -5,11 +5,6 @@
 # include "../response/Response.hpp"
 # include "../location/Location.hpp"
 # include "../config/Config.hpp"
-# include <dirent.h>
-#include <string>
-#include <sstream>
-#include <sys/types.h>
-#include <fstream>
 # include "../utils/Utils.hpp"
 # include "../cgi/Cgi.hpp"
 

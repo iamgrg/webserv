@@ -6,18 +6,11 @@
 /*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:05 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/17 18:26:13 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/17 18:55:01 by gregoire         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
-#include <iostream>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <cstring>
-#include <unistd.h>
-#include <arpa/inet.h>
 
 Server::Server(Config const & config) : _config(config), _routes(config){
     _initialize();

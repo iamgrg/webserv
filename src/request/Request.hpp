@@ -1,9 +1,5 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
-
-#include <string>
-#include <vector>
-#include <map>
 #include "../include/webserv.hpp"
 
 class Request {

@@ -2,8 +2,6 @@
 #define RESPONSE_HPP
 
 #include "../../include/webserv.hpp"
-#include <string>
-#include <map>
 
 class Response {
 private:

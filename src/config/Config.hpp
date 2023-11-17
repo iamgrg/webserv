@@ -3,14 +3,9 @@
 
 #include "../../include/webserv.hpp"
 #include "../location/Location.hpp"
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <vector>
-#include <map>
 
-class Config {
+class Config
+{
 private:
     // Attributs privés
     std::string _host;
