@@ -6,7 +6,7 @@
 /*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:05 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/13 15:12:58 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/17 15:41:23 by gregoire         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,8 @@ void Server::_initialize() {
     _server_addr.sin_family = AF_INET;
     std::string ipString = this->_config.getHost();
     _server_addr.sin_addr.s_addr = inet_addr(ipString.c_str());
-    _server_addr.sin_port = htons(this->_config.getPort());
+    _server_addr.sin_port = htons(this->_config.getPorts().at(0));
+    // _server_addr.sin_port = htons(this->_config.getPort());
     // Lier le socket à l'adresse et au port
     if (bind(_listen_fd, (struct sockaddr*)&_server_addr, sizeof(_server_addr)) == -1) {
         std::cerr << "Error: bind failed." << std::endl;
@@ -58,7 +59,7 @@ void Server::start() {
         std::cerr << "Error: listen failed." << std::endl;
         exit(EXIT_FAILURE);
     }
-    std::cout << "Server started and listening on port " << this->_config.getPort() << "..." << std::endl;
+    std::cout << "Server started and listening on port " << this->_config.getPorts().at(0) << "..." << std::endl;
     while (_isRunning) {
         _handleRequests();
     }
@@ -84,7 +85,7 @@ void Server::_handleRequests() {
 
     while (_isRunning) {
         fd_set tmpfds = _readfds;
-        if (select(max_fd + 1, &tmpfds, nullptr, nullptr, nullptr) < 0) {
+        if (select(max_fd + 1, &tmpfds, NULL, NULL, NULL) < 0) {
             perror("select");
             exit(EXIT_FAILURE);
         }
@@ -107,16 +108,32 @@ void Server::_handleRequests() {
                     int bytesRead = recv(i, buffer, sizeof(buffer), 0);
                     if (bytesRead <= 0) {
                         if (bytesRead < 0)
-                            {
-                                std::cerr << "Recv failed" << ": " << std::strerror(errno) << std::endl;
-                                exit(EXIT_FAILURE);
-                            }
+                                throw std::runtime_error("Recv failed");
                         close(i);
                         FD_CLR(i, &_readfds);
                         _clients.erase(std::remove(_clients.begin(), _clients.end(), i), _clients.end());
                     } else {
                         std::string message(buffer, bytesRead);
-                        Request request(message);
+                        // A FAIRE !! : check validité du format du message => pas de requetes HTTPS ou autres formats
+                        Request request(message, this->_config.getMaxBodySize());
+                        // && request.getHeader("Host") + ":" + std::to_string(_config.getPorts().at(1)) != this->_config.getHost())
+                        bool validHost = false;
+                        for (std::vector<std::string>::const_iterator it = this->_config.getNames().begin(); it != this->_config.getNames().end(); ++it)
+                        {
+                            if(request.getHeader("Host") == *it + ":" + std::to_string(this->_config.getPorts().at(0)))
+                                validHost = true;
+                        }
+                        if(!validHost)
+                        {
+                            std::string error = "HTTP/1.1 400 Bad Request\r\n\r\n";
+                            if (send(i, error.c_str(), error.length(), 0) == -1) {
+                                std::cerr << "Error: send failed." << std::endl;
+                                exit(EXIT_FAILURE);
+                            }
+                            close(i);
+                            FD_CLR(i, &_readfds);
+                            continue;
+                        }
                         std::cout << request << std::endl;
                         Response response = _routes.handle(request);
                         this->_sendResponse(response, i);

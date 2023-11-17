@@ -3,22 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <title>Test CGI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 60%;       /* Largeur de la div à 60% de l'écran */
+            margin: 0 auto;  
+        }
+        h1 {
+            width: 80vh;
+            color: #333;
+            text-align: center;
+        }
+        form {
+            text-align: center;
+        }
+        input {
+            margin: 10px 0;
+        }
+        .field {
+            width: 80%;
+            border-radius: 40px;
+            height: 50px;
+            border: solid 1px #ddd;
+            text-align: center;
+            font-size: large;
+            transition: box-shadow 0.3s;
+        }
+        .field::placeholder {
+            color: #ddd;
+            font-style: italic;
+            font-size: large;
+            text-align: center;
+        }
+        .filed:hover{
+            border: none;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        .field:focus {
+            outline: none;
+        }
+        .send{
+            width: 30%;
+            border-radius: 10px;
+            height: 50px;
+            border: 1px solid #ddd;
+            text-align: center;
+            font-size: large;
+            /* background-color: #ddd; */
+            color: #333;
+            font-weight: bold;
+            transition: box-shadow 0.3s;
+        }
+        .send:hover{
+            /* background-color: #ffffff; */
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <h1>Page de test CGI</h1>
-    <p>Test de l'exécution des scripts CGI pour obtenir la météo d'une ville.</p>
-    
-    <!-- Formulaire pour une ville spécifique -->
-    <form action="cgi.py" method="post">
-        <label for="city">Ville :</label>
-        <input type="text" id="city" name="city"><br><br>
-        <input type="submit" value="Obtenir la Météo">
-    </form>
-    
-    <br>
-
-    <!-- Bouton pour une ville aléatoire -->
-    <a href="cgi.py" method="get">Ville Aléatoire</a>
+    <div>
+        <h1>Page de test CGI</h1>        
+        <div class="link-box">
+        <form action="cgi.py" method="post">
+            <label for="city"></label>
+            <input class="field" placeholder="City" id="city" name="city"><br><br>
+            <input class="send" type="submit" value="Obtenir la Météo">
+            <input class="send" type="button" value="Ville Aléatoire" onclick="window.location.href='cgi.py'">
+        </form>
+        </div>
+    </div>
 </body>
 </html>
 

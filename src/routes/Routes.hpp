@@ -19,16 +19,19 @@ private:
 	std::vector<Location *> _locations;
 	std::string _rootPath;
 	std::map<std::string, std::string> _macrosType;
-	Response *_handleGet(std::vector<std::string> const &filesPath);
+	std::map<int, std::string> _errorPages;
+	Response *_handleGet(std::vector<std::string> const &filesPath, std::string const &redirectPath);
 	Response *_handlePost(std::string const & body, std::string const &type);
-	Response *_handleDelete(std::vector<std::string> const &filesPath);
+	Response *_handleDelete(std::string const &query);
 	Response *_handleCgi(Request const &request, std::string const &method);
-	Response *_handleForbidden();
-	Response *_handleForbidden2();
+	Response *_handleError(int code);
+	Response *_handleRedirect(std::string const &redirectPath);
+	Response *_handleAutoindex(std::string const &directoryPath);
 public:
 	Routes(Config const &config);
 	~Routes();
 	Response const &handle(Request const &request);
+	bool isHTTPMethod(std::string const &httpRequest);
 };
 
 

@@ -26,7 +26,9 @@ void Response::addHeader(const std::string& key, const std::string& value) {
 void Response::setBody(const std::string& body) {
     _body = body;
 }
-
+std::string const & Response::getBody() const {
+    return _body;
+}
 // Construire la réponse HTTP complète
 std::string Response::buildResponse() const {
     std::ostringstream response;

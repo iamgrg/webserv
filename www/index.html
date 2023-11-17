@@ -14,10 +14,14 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            width: 60%;       /* Largeur de la div à 60% de l'écran */
+            margin: 0 auto;  
         }
         h1 {
+            width: 60vh;
             color: #333;
-        }
+            text-align: center;
+      }
         ul {
             list-style: none;
             padding: 0;
@@ -27,7 +31,7 @@
         }
         a {
             text-decoration: none;
-            color: #007bff;
+            color: black;
             font-weight: bold;
         }
         a:hover {
@@ -54,31 +58,27 @@
 </head>
 <body>
     <div>
-        <h1>Webserv - Serveur HTTP</h1>
-        <p>Ce serveur est implémenté en C++ 98 conformément aux spécifications du projet.</p>
-		<a href="download">
-        <div class="link-box">
-                <img src="404.png" alt="Téléchargement">
-                <p>Téléchargement</p>
-        </div>
-		</a>
+        <h1>Webserv</h1>
 		<a href="form">
-        <div class="link-box">
-                <img src="path/to/form-image.jpg" alt="Formulaire">
+            <div class="link-box">
                 <p>Formulaire</p>
-        </div>
+            </div>
 		</a>
+        <a href="download">
+            <div class="link-box">
+                <p>Téléchargement</p>
+            </div>
+        </a>
+        <a href="upload">
+            <div class="link-box">
+                <p>Upload</p>
+            </div>
+            </a>
 		<a href="cgi-test">
-        <div class="link-box">
-                <img src="path/to/cgi-test-image.jpg" alt="Test CGI">
+            <div class="link-box">
                 <p>CGI</p>
-        </div>
+            </div>
 		</a>
-		<a href="upload">
-		<div class="link-box">
-				<img src="path/to/upload-image.jpg" alt="Upload">
-				<p>Upload</p>
-		</div>
     </div>
 </body>
 </html>

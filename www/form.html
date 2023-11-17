@@ -3,13 +3,78 @@
 <head>
 	<meta charset="UTF-8">
     <title>Formulaire</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 60%;       /* Largeur de la div à 60% de l'écran */
+            margin: 0 auto;  
+        }
+        h1 {
+            width: 80vh;
+            color: #333;
+            text-align: center;
+        }
+        form {
+            text-align: center;
+        }
+        input {
+            margin: 10px 0;
+        }
+        .field {
+            width: 80%;
+            border-radius: 40px;
+            height: 50px;
+            border: solid 1px #ddd;
+            text-align: center;
+            font-size: large;
+        }
+        .field::placeholder {
+            color: #ddd;
+            font-style: italic;
+            font-size: large;
+            text-align: center;
+        }
+        .filed:hover{
+            box-shadow: 0 0 35px rgba(0,0,0,0.2);
+        }
+        .field:focus {
+            outline: none;
+        }
+        .send{
+            width: 30%;
+            border-radius: 10px;
+            height: 50px;
+            border: solid 1px #ddd;
+            text-align: center;
+            font-size: large;
+            color: #333;
+            font-weight: bold;
+            transition: box-shadow 0.3s;
+        }
+        .send:hover{
+            /* box-shadow: 0 0 20px rgba(94, 94, 94, 0.6); */
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
+    <div>
     <h1>Page de formulaire</h1>
-    <form action="/form" method="post">
-        <label for="name">Nom :</label>
-        <input type="text" id="name" name="name"><br><br>
-        <input type="submit" value="Envoyer">
-    </form>
+    <div class="link-box">
+        <form action="/form" method="post">
+            <input class="field" placeholder="name" type="text" id="name" name="name"><br><br>
+            <input class="send" type="submit" value="Envoyer">
+        </form>
+    </div>
+    </div>
 </body>
 </html>

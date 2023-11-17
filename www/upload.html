@@ -3,13 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <title>Upload de Fichier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 60%;       /* Largeur de la div à 60% de l'écran */
+            margin: 0 auto;  
+        }
+        h1 {
+            width: 60vh;
+            color: #333;
+            text-align: center;
+      }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin: 10px 0;
+        }
+        a {
+            text-decoration: none;
+            color: black;
+            font-weight: bold;
+        }
+        a:hover {
+            color: #0056b3;
+        }
+        .link-box {
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: box-shadow 0.3s;
+        }
+        .link-box img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        .upload {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: box-shadow 0.3s;
+        }
+        .upload:hover{
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            cursor : pointer;
+        }
+    </style>
 </head>
 <body>
-    <h1>Uploader un Fichier</h1>
-    <form action="upload" method="post" enctype="multipart/form-data">
-        <label for="fileToUpload">Sélectionnez un fichier :</label>
-        <input type="file" name="fileToUpload" id="fileToUpload">
-        <input type="submit" value="Uploader le fichier" name="submit">
-    </form>
+    <div>
+        <h1>Uploader un Fichier</h1>
+        <div class="link-box">
+            <form action="upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="fileToUpload" id="fileToUpload"><br><br>
+                <input class="upload" type="submit" value="Uploader le fichier" name="submit">
+            </form>
+        </div>
+    </div>
 </body>
 </html>

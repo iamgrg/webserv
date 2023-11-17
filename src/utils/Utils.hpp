@@ -29,7 +29,7 @@ public:
 	static Response *downloadFile(std::string const &query, std::string const rootPath);
 	static bool fileExists(const std::string &path);
 	static void uploadFile(std::string const &body, std::string const &type, Response *res, std::string const &_rootPath);
-	std::string static toLower(std::string str);
+	static std::string toLower(std::string str);
 };
 
 #endif // UTILS_HPP

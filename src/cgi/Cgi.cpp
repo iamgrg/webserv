@@ -15,7 +15,7 @@ Cgi::Cgi() {
 	largest_cities.push_back("Cairo");
 	largest_cities.push_back("New York");
     // Initialisation du générateur de nombres aléatoires
-    std::srand(std::time(nullptr));
+    std::srand(std::time(NULL));
 
     // Sélection aléatoire d'une ville
     int random_index = std::rand() % largest_cities.size();
