@@ -6,7 +6,7 @@
 /*   By: gansard <gansard@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:05 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/18 19:04:18 by gansard          ###   ########.fr       */
+/*   Updated: 2023/11/18 21:17:39 by gansard          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,8 +41,7 @@ void Server::_initialize() {
     server_addr.sin_addr.s_addr = inet_addr(_config.getHost().c_str());
     server_addr.sin_port = htons(port);
 
-    if (bind(listen_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) ==
-        -1) {
+    if (bind(listen_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
       std::cerr << "Error: bind failed." << std::endl;
       close(listen_fd);
       exit(EXIT_FAILURE);
@@ -160,21 +159,41 @@ void Server::_processClientRequest(int client_fd) {
 	ss2 << this->_config.getPorts().at(1);
 	std::string portStr = ss.str();
 	std::string port2Str = ss2.str();
-  char buffer[100000];
-  int bytesRead = recv(client_fd, buffer, sizeof(buffer), 0);
-  if (bytesRead <= 0) {
-    if (bytesRead < 0) {
-      std::cerr << "Recv failed" << std::endl;
-    }
-    close(client_fd);
-    FD_CLR(client_fd, &_readfds);
-    _clients.erase(std::remove(_clients.begin(), _clients.end(), client_fd),
-                   _clients.end());
-    _clientsToClose.insert(client_fd);
-    return;
-  }
-  std::string message(buffer, bytesRead);
-  std::cout << message << std::endl;
+	//char buffer[10000] = "";
+	//int bytesRead = recv(client_fd, buffer, sizeof(buffer), 0);
+	//std::cout << "BYTESREAD : " << bytesRead << std::endl;
+	//if (bytesRead <= 0) {
+	//	if (bytesRead < 0) {
+	//	std::cerr << "Recv failed" << std::endl;
+	//	}
+	//	close(client_fd);
+	//	FD_CLR(client_fd, &_readfds);
+	//	// hypothese : c'est mal liberer
+	//	_clients.erase(std::remove(_clients.begin(), _clients.end(), client_fd),
+	//				_clients.end());
+	//	_clientsToClose.insert(client_fd);
+	//	return;
+	//}
+	//std::string message(buffer, bytesRead);
+	//std::cout << message << std::endl;
+	std::string message;
+	int bytesRead;
+	int i = 0;
+	do {
+		char buffer[1024];
+		bytesRead = recv(client_fd, buffer, sizeof(buffer), 0);
+
+		if (bytesRead > 0) {
+			message.append(buffer, bytesRead);
+		} else if (bytesRead < 0) {
+			std::cerr << "Erreur lors de la réception des données" << std::endl;
+			FD_CLR(client_fd, &_readfds);
+			_clients.erase(std::remove(_clients.begin(), _clients.end(), client_fd),_clients.end());
+			_clientsToClose.insert(client_fd);
+			break;
+		}
+		i++;
+	} while (bytesRead < 5008);
   // A FAIRE !! : check validité du format du message => pas de requetes HTTPS
   // ou autres formats
   Request request(message, this->_config.getMaxBodySize());

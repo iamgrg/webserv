@@ -128,7 +128,7 @@ Response *Routes::_handlePost(std::string const &body,
 	res->addHeader("Content-Length", ss.str());
     return res;
   } else if (std::string::npos != type.find(_macrosType["UPLOAD"]))
-    Utils::uploadFile(body, type, res, _rootPath);
+    	Utils::uploadFile(body, type, res, _rootPath);
   else
     res = _handleError(404);
   return res;

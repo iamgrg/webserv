@@ -185,13 +185,11 @@ void Utils::uploadFile(std::string const &body, std::string const &type,
                        Response *res, std::string const &_rootPath) {
   std::cout << "UPLOAD FILE" << std::endl;
   std::string boundary = type.substr(type.find("boundary=") + 9);
-  std::string tmp = body.substr(body.find("name=") + 6,
-                                body.find("\r\n\r\n") - body.find("name=") - 8);
-  std::string contentFile =
-      body.substr(body.find("\r\n\r\n") + 4,
-                  body.find("--" + boundary) - body.find("\r\n\r\n") - 6);
-  std::size_t start =
-      tmp.find("filename=\"") + 10; // "filename=\"" a 10 caractères
+  std::cout << "JE VOUS AVEZ DIS QUOi" <<  type << std::endl;
+  std::string tmp = body.substr(body.find("name=") + 6, body.find("\r\n\r\n") - body.find("name=") - 8);
+  std::cout << "Ali Abdelaziz" << std::endl;
+  std::string contentFile = body.substr(body.find("\r\n\r\n") + 4, body.find("--" + boundary) - body.find("\r\n\r\n") - 6);
+  std::size_t start = tmp.find("filename=\"") + 10; // "filename=\"" a 10 caractères
   std::string filename = tmp.substr(start, tmp.find("\"", start) - start);
   std::size_t endPos = contentFile.find(boundary);
   contentFile = contentFile.substr(0, endPos - 2);
