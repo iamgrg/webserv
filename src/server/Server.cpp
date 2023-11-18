@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
+/*   By: gansard <gansard@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:05 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/17 18:55:01 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/18 19:04:18 by gansard          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -154,7 +154,13 @@ void Server::_acceptNewConnection(int listen_fd) {
 }
 
 void Server::_processClientRequest(int client_fd) {
-  char buffer[10000];
+	std::ostringstream ss;
+	std::ostringstream ss2;
+	ss << this->_config.getPorts().at(0);
+	ss2 << this->_config.getPorts().at(1);
+	std::string portStr = ss.str();
+	std::string port2Str = ss2.str();
+  char buffer[100000];
   int bytesRead = recv(client_fd, buffer, sizeof(buffer), 0);
   if (bytesRead <= 0) {
     if (bytesRead < 0) {
@@ -168,6 +174,7 @@ void Server::_processClientRequest(int client_fd) {
     return;
   }
   std::string message(buffer, bytesRead);
+  std::cout << message << std::endl;
   // A FAIRE !! : check validité du format du message => pas de requetes HTTPS
   // ou autres formats
   Request request(message, this->_config.getMaxBodySize());
@@ -175,13 +182,10 @@ void Server::_processClientRequest(int client_fd) {
   for (std::vector<std::string>::const_iterator it =
            this->_config.getNames().begin();
        it != this->_config.getNames().end(); ++it) {
-    if (request.getHeader("Host") ==
-            *it + ":" + std::to_string(this->_config.getPorts().at(0)) ||
-        request.getHeader("Host") ==
-            *it + ":" + std::to_string(this->_config.getPorts().at(1)))
+    if (request.getHeader("Host") == *it + ":" + portStr ||
+        request.getHeader("Host") == *it + ":" + port2Str)
       validHost = true;
   }
-  std::cout << "PORT[1] : " << this->_config.getPorts().at(1) << std::endl;
   if (!validHost) {
     std::string error = "HTTP/1.1 400 Bad Request\r\n\r\n";
     if (send(client_fd, error.c_str(), error.length(), 0) == -1) {

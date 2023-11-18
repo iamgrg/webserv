@@ -17,12 +17,25 @@ void Request::parse(const std::string &rawRequest, int maxBodySize) {
   std::string bodySection;
   // Obtenir la première ligne (Request Line)
   if (std::getline(stream, line) && !line.empty()) {
-    line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
+	std::string cleanedLine;
+	for (size_t i = 0; i < line.length(); ++i) {
+		if (line[i] != '\r') {
+			cleanedLine += line[i];
+		}
+	}
+	line = cleanedLine;
     _parseRequestLine(line);
   }
   // Obtenir les headers
   while (std::getline(stream, line) && line != "\r") {
-    line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
+	std::string cleanedLine;
+	for (size_t i = 0; i < line.length(); ++i) {
+		if (line[i] != '\r') {
+			cleanedLine += line[i];
+		}
+	}
+	line = cleanedLine;
+    //line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
     headerSection.push_back(line + "\n");
   }
   _parseHeaders(headerSection);
@@ -30,11 +43,10 @@ void Request::parse(const std::string &rawRequest, int maxBodySize) {
   while (std::getline(stream, line)) {
     bodySection += line + "\n";
   }
+  std::cout << "BODY : " << bodySection << std::endl; 
   _body = bodySection.substr(0, bodySection.size() - 1);
   if (_body.size() < (size_t)maxBodySize)
     _validRequest = true;
-  std::cout << "BODY SIZE : " << _body.size() << std::endl;
-  std::cout << "VALID ? :" << _validRequest << std::endl;
 }
 
 void Request::_parseRequestLine(const std::string &requestLine) {

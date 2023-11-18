@@ -23,7 +23,7 @@ int Config::getMaxBodySize() const { return this->_maxBodySize; }
 std::string Config::getPathCGI() const { return this->_pathCGI; }
 
 void Config::_parseConfig(std::string const &configPath) {
-  std::ifstream configFile(configPath);
+  std::ifstream configFile(configPath.c_str());
   std::string line;
   int lineNumber = 0;
   bool insideServerBlock = false;
@@ -43,18 +43,29 @@ void Config::_parseConfig(std::string const &configPath) {
     size_t firstNonSpace = line.find_first_not_of(" \t");
     if (firstNonSpace != std::string::npos)
       line = line.substr(firstNonSpace);
-    // Ignorer les lignes vides ou avec seulement des espaces
-    if (line.empty() || std::all_of(line.begin(), line.end(), isspace))
+	bool allSpaces = true;
+	for (size_t i = 0; i < line.length(); ++i) {
+		if (!isspace(line[i])) {
+			allSpaces = false;
+			break;
+		}
+	}
+	if (line.empty() || allSpaces)
       continue;
     // Supprimer les espaces en fin de ligne
     size_t lastNonSpace = line.find_last_not_of(" \t;");
     line = line.substr(0, lastNonSpace + 2);
     // Vérifier si la ligne se termine par un point-virgule ou un crochet
     if (!line.empty() &&
-        (line.back() != ';' && line.back() != '{' && line.back() != '}'))
-      throw std::runtime_error("Erreur de syntaxe à la ligne " +
-                               std::to_string(lineNumber) +
-                               ": fin de ligne attendue avec ';'");
+        (line[line.size() - 1] != ';' && line[line.size() - 1] != '{' && line[line.size() - 1] != '}'))
+	{
+		std::ostringstream ss;
+		ss << lineNumber;
+		std::string lineNumberStr = ss.str();
+      	throw std::runtime_error("Erreur de syntaxe à la ligne " +
+                lineNumberStr + ": fin de ligne attendue avec ';'");
+	}
+
     // ============================================== //
 
     // Détecter le début et la fin du bloc server
@@ -92,7 +103,8 @@ void Config::_parseConfig(std::string const &configPath) {
           while (iss >> portstr) {
             if (portstr.find(";") != std::string::npos)
               portstr = portstr.substr(0, portstr.size() - 1);
-            int port = std::stoi(portstr);
+            int port;
+			std::istringstream(portstr) >> port;
             _ports.push_back(port);
           }
         } else if (key == "server_name") {
@@ -111,7 +123,8 @@ void Config::_parseConfig(std::string const &configPath) {
         } else if (key == "client_max_body_size") {
           std::string sizeStr;
           iss >> sizeStr;
-          _maxBodySize = std::stoi(sizeStr);
+		  std::istringstream iss(sizeStr);
+		  iss >> _maxBodySize;
         } else if (key == "root") {
           std::string rootPath;
           iss >> rootPath;
@@ -138,9 +151,13 @@ void Config::_parseConfig(std::string const &configPath) {
               new Location(path, methods, filesPath, false, "");
           _locations.push_back(location);
         } else
-          throw std::runtime_error("Erreur de syntaxe à la ligne " +
-                                   std::to_string(lineNumber) +
-                                   ": directive inconnue '" + key + "'");
+		{
+			std::ostringstream ss;
+			ss << lineNumber;
+			std::string lineNumberStr = ss.str();
+			throw std::runtime_error("Erreur de syntaxe à la ligne " +
+				lineNumberStr + ": directive inconnue '" + key + "'");
+		}
       }
     }
   }
@@ -198,7 +215,10 @@ void Config::_parseLocationBlock(std::stringstream &locationBlockStream) {
 
 void touch(int code, std::map<int, std::string> &_errorPages) {
   if (_errorPages.find(code) == _errorPages.end()) {
-    _errorPages[code] = "/error/" + std::to_string(code) + ".html";
+	std::ostringstream ss;
+	ss << code;
+	std::string codeStr = ss.str();
+    _errorPages[code] = "/error/" + codeStr + ".html";
   }
 }
 

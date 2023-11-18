@@ -53,9 +53,9 @@ int Cgi::exec() {
     dup2(pipefd[1], STDOUT_FILENO); // Redirige STDOUT vers le pipe
     close(pipefd[1]);
 
-    char *argv[] = {(char *)"python3", (char *)"./src/cgi/script.py",
+    char *argv[] = {(char *)"python", (char *)"./src/cgi/script.py",
                     (char *)_city.c_str(), NULL};
-    execve("/opt/homebrew/bin/python3", argv, NULL);
+    execve("/usr/bin/python", argv, NULL);
     std::cerr << "Échec de l'execution du script" << std::endl;
     exit(1);
   } else {

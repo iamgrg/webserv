@@ -147,7 +147,7 @@ void Utils::stringToHTML(const std::string &content, const std::string &path,
 }
 
 std::string fileToBinaryString(const std::string &path) {
-  std::ifstream file(path, std::ios::binary);
+  std::ifstream file(path.c_str(), std::ios::binary);
   std::string contents;
 
   if (file) {
@@ -174,7 +174,10 @@ Response *Utils::downloadFile(std::string const &query,
   res->addHeader("Content-Type", "text/html");
   res->setBody(res->fileToString("www/404.html"));
   std::cout << "BODY : " << res->getBody() << std::endl;
-  res->addHeader("Content-Length", std::to_string(res->getBody().size()));
+  std::ostringstream ss;
+ss << res->getBody().size();
+res->addHeader("Content-Length", ss.str());
+
   return res;
 }
 
@@ -195,11 +198,13 @@ void Utils::uploadFile(std::string const &body, std::string const &type,
   if (contentFile == "" || filename == "") {
     res->setStatus(400, "Bad Request");
     res->addHeader("Content-Type", "text/html");
-    res->setBody("<html><body>Requête invalide.</body></html>");
-    res->addHeader("Content-Length", std::to_string(res->getBody().size()));
+    res->setBody("<html><head><meta charset=\'UTF-8\'<head><body><h1>Requête invalide.<h1></body></html>");
+    std::ostringstream ss;
+	ss << res->getBody().size();
+	res->addHeader("Content-Length", ss.str());
     return;
   }
-  std::ofstream tmpFile(_rootPath + "/uploads/" + filename,
+  std::ofstream tmpFile((_rootPath + "/uploads/" + filename).c_str(),
                         std::ofstream::binary);
   if (tmpFile.is_open()) {
     std::cout << "Fichier ouvert" << std::endl;
@@ -225,7 +230,10 @@ void Utils::uploadFile(std::string const &body, std::string const &type,
     res->addHeader("Content-Type", "text/html");
     res->setBody(
         "<html><body>Erreur lors de l'upload du fichier.</body></html>");
-    res->addHeader("Content-Length", std::to_string(res->getBody().size()));
+    std::ostringstream ss;
+ss << res->getBody().size();
+res->addHeader("Content-Length", ss.str());
+
   }
 }
 

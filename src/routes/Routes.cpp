@@ -60,15 +60,13 @@ Response const &Routes::handle(Request const &request) {
           else if (request.getQuery() != "")
             res = Utils::downloadFile(request.getQuery(), _rootPath);
           else
-            res = this->_handleGet((*it)->getFilesPath(),
-                                   (*it)->getRedirectPath());
+            res = this->_handleGet((*it)->getFilesPath(), (*it)->getRedirectPath());
           return *res;
         } else if (request.getMethod() == "POST") {
           if (request.getUrl() == "/cgi.py")
             res = this->_handleCgi(request, "POST");
           else
-            res =
-                this->_handlePost(request.getBody(), request.getContentType());
+            res = this->_handlePost(request.getBody(), request.getContentType());
           return *res;
         } else if (request.getMethod() == "DELETE") {
           if (request.getQuery() != "")
@@ -105,7 +103,9 @@ Response *Routes::_handleGet(std::vector<std::string> const &filesPath,
       res->setStatus(200, "OK");
       res->addHeader("Content-Type", "text/html");
       res->setBody(res->fileToString(path));
-      res->addHeader("Content-Length", std::to_string(res->getBody().size()));
+	std::ostringstream ss;
+	ss << res->getBody().size();
+	res->addHeader("Content-Length", ss.str());
       return res;
     }
   }
@@ -123,7 +123,9 @@ Response *Routes::_handlePost(std::string const &body,
     res->setStatus(200, "OK");
     res->addHeader("Content-Type", "text/html");
     res->setBody(responseBody);
-    res->addHeader("Content-Length", std::to_string(res->getBody().size()));
+	std::ostringstream ss;
+	ss << res->getBody().size();
+	res->addHeader("Content-Length", ss.str());
     return res;
   } else if (std::string::npos != type.find(_macrosType["UPLOAD"]))
     Utils::uploadFile(body, type, res, _rootPath);
@@ -155,7 +157,9 @@ Response *Routes::_handleCgi(Request const &request,
   }
   res->setStatus(200, "OK");
   res->addHeader("Content-Type", "text/html");
-  res->addHeader("Content-Length", std::to_string(res->getBody().size()));
+	std::ostringstream ss;
+	ss << res->getBody().size();
+	res->addHeader("Content-Length", ss.str());
   return res;
 }
 
@@ -172,7 +176,9 @@ Response *Routes::_handleDelete(std::string const &query) {
       res->setStatus(200, "OK");
       res->addHeader("Content-Type", "text/html");
       res->setBody(res->fileToString("www/dowload.html"));
-      res->addHeader("Content-Length", std::to_string(res->getBody().size()));
+	std::ostringstream ss;
+	ss << res->getBody().size();
+	res->addHeader("Content-Length", ss.str());
     }
     return res;
   }
@@ -197,7 +203,9 @@ Response *Routes::_handleRedirect(std::string const &newPath) {
                      "\">here</a>.</p>\n"
                      "</body></html>";
   res->setBody(body);
-  res->addHeader("Content-Length", std::to_string(res->getBody().size()));
+	std::ostringstream ss;
+	ss << res->getBody().size();
+	res->addHeader("Content-Length", ss.str());
   return res;
 }
 
@@ -230,7 +238,9 @@ Response *Routes::_handleAutoindex(std::string const &directoryPath) {
   res->setStatus(200, "OK");
   res->addHeader("Content-Type", "text/html");
   res->setBody(html.str());
-  res->addHeader("Content-Length", std::to_string(res->getBody().size()));
+	std::ostringstream ss;
+	ss << res->getBody().size();
+	res->addHeader("Content-Length", ss.str());
   return res;
 }
 
@@ -247,6 +257,8 @@ Response *Routes::_handleError(int code) {
   res->addHeader("Content-Type", "text/html");
   res->setStatus(code, msg[code]);
   res->setBody(res->fileToString(_rootPath + _errorPages[code]));
-  res->addHeader("Content-Length", std::to_string(res->getBody().size()));
+	std::ostringstream ss;
+	ss << res->getBody().size();
+	res->addHeader("Content-Length", ss.str());
   return res;
 }
