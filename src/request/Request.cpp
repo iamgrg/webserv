@@ -43,7 +43,6 @@ void Request::parse(const std::string &rawRequest, int maxBodySize) {
   while (std::getline(stream, line)) {
     bodySection += line + "\n";
   }
-  std::cout << "BODY : " << bodySection << std::endl; 
   _body = bodySection.substr(0, bodySection.size() - 1);
   if (_body.size() < (size_t)maxBodySize)
     _validRequest = true;
@@ -61,8 +60,7 @@ void Request::_parseRequestLine(const std::string &requestLine) {
     _query = _url.substr(found + 1);
     _url = _url.substr(0, found);
   } else
-    _query = "";
-}
+    _query = "";}
 
 void Request::_parseHeaders(const std::vector<std::string> &headerLines) {
   for (std::vector<std::string>::const_iterator it = headerLines.begin();

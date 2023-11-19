@@ -68,12 +68,24 @@
     <div>
         <h1>Uploader un Fichier</h1>
         <div class="link-box">
-            <form action="/upload" method="post" enctype="multipart/form-data">
-                <input type="file" name="fileToUpload" id="fileToUpload"><br><br>
-                <input class="upload" type="submit" value="Uploader le fichier" name="submit">
-            </form>
+			<form action="/upload" method="post" enctype="multipart/form-data" onsubmit="return validateFile()">
+				<input type="file" name="fileToUpload" id="fileToUpload"  accept=".c,.h,.cpp,.hpp,.md,.txt">
+				<input class="upload" type="submit" value="Uploader le fichier" name="submit">
+			</form>
+			
         </div>
     </div>
+<script>
+	function validateFile() {
+		var fileInput = document.getElementById('fileToUpload');
+		var filename = fileInput.value.split('\\').pop();
+		var regex = /^[a-zA-Z0-9._]+$/;
+		if (!regex.test(filename)) {
+			alert("Nom de fichier invalide. Seuls les caractères alphanumériques, les points et les underscores sont autorisés.");
+			return false;
+		}
+		return true;
+	}
+</script>	
 </body>
 </html>
-

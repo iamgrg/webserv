@@ -44,7 +44,6 @@ Response const &Routes::handle(Request const &request) {
   std::vector<Location *>::iterator it = this->_locations.begin();
   while (it != this->_locations.end()) {
     if (request.getUrl() == (*it)->getPath()) {
-      std::cout << "PATH : " << (*it)->getPath() << std::endl;
       if (std::find((*it)->getMethods().begin(), (*it)->getMethods().end(),
                     request.getMethod()) != (*it)->getMethods().end()) {
         if ((*it)->getAutoindex() &&
@@ -91,14 +90,12 @@ Response *Routes::_handleGet(std::vector<std::string> const &filesPath,
                              std::string const &redirectPath) {
   Response *res = new Response();
   if (redirectPath != "") {
-    std::cout << "REDIRECT PATH : " << redirectPath << std::endl;
     res = _handleRedirect(redirectPath);
     return res;
   }
   for (std::vector<std::string>::const_iterator it = filesPath.begin();
        it != filesPath.end(); ++it) {
     std::string path = _rootPath + "/" + (*it);
-    std::cout << "PATH : " << path << std::endl;
     if (Utils::fileExists(path)) {
       res->setStatus(200, "OK");
       res->addHeader("Content-Type", "text/html");

@@ -173,7 +173,6 @@ Response *Utils::downloadFile(std::string const &query,
   res->setStatus(404, "Not Found");
   res->addHeader("Content-Type", "text/html");
   res->setBody(res->fileToString("www/404.html"));
-  std::cout << "BODY : " << res->getBody() << std::endl;
   std::ostringstream ss;
 ss << res->getBody().size();
 res->addHeader("Content-Length", ss.str());
@@ -181,31 +180,93 @@ res->addHeader("Content-Length", ss.str());
   return res;
 }
 
+bool isAlphanumeric(const std::string& filename) {
+	if (filename == "")
+		return false;
+    for (std::string::const_iterator it = filename.begin(); it != filename.end(); ++it) {
+        if (!std::isalnum(static_cast<unsigned char>(*it)) && *it != '.' && *it != '_') {
+            return false;
+        }
+    }
+	std::cout << "alphanum" << std::endl;
+    return true;
+}
+
+bool Utils::isValidUtf8(const std::string& str) {
+    size_t i = 0;
+    while (i < str.size()) {
+        size_t bytesToFollow = 0;
+        unsigned char c = str[i];
+
+        if (c <= 0x7F) { // ASCII
+            // Pas de bytes supplémentaires pour les caractères ASCII
+            bytesToFollow = 0;
+        } else if ((c & 0xE0) == 0xC0) { // Première octet de 2-octets
+            bytesToFollow = 1;
+        } else if ((c & 0xF0) == 0xE0) { // Première octet de 3-octets
+            bytesToFollow = 2;
+        } else if ((c & 0xF8) == 0xF0) { // Première octet de 4-octets
+            bytesToFollow = 3;
+        } else {
+            return false; // Non valide UTF-8 octet
+        }
+
+        // Vérifier les octets suivants
+        for (size_t j = 1; j <= bytesToFollow; ++j) {
+            if (i + j >= str.size() || (str[i + j] & 0xC0) != 0x80) {
+                return false; // Non valide UTF-8 séquence
+            }
+        }
+
+        i += 1 + bytesToFollow; // Avancer au prochain caractère
+    }
+    return true; // Valide UTF-8 string
+}
+
+//bool isBinaryFile(const std::string& content) {
+//	if (content == "")
+//		return true;
+//	int i = 0;
+//	std::cout << content << std::endl;
+//    for (std::string::const_iterator it = content.begin(); it != content.end(); ++it) {
+//        unsigned char c = static_cast<unsigned char>(*it);
+//		std::cout << c << std::endl;
+//		if () {
+//			std::cout << "Caractère binaire détecté : " << static_cast<int>(c) << " i : "<< i << std::endl;
+//			if(std::isspace(c))
+//				std::cout << "c'est ispace" << std::endl;
+//			//if(!std::isprint(c))
+//			//	std::cout << "c'est isprint" << std::endl;
+//			return true;
+//		}
+//		i++;
+//    }
+//    return false;
+//}
+
+
+
 void Utils::uploadFile(std::string const &body, std::string const &type,
                        Response *res, std::string const &_rootPath) {
-  std::cout << "UPLOAD FILE" << std::endl;
   std::string boundary = type.substr(type.find("boundary=") + 9);
-  std::cout << "JE VOUS AVEZ DIS QUOi" <<  type << std::endl;
   std::string tmp = body.substr(body.find("name=") + 6, body.find("\r\n\r\n") - body.find("name=") - 8);
-  std::cout << "Ali Abdelaziz" << std::endl;
   std::string contentFile = body.substr(body.find("\r\n\r\n") + 4, body.find("--" + boundary) - body.find("\r\n\r\n") - 6);
   std::size_t start = tmp.find("filename=\"") + 10; // "filename=\"" a 10 caractères
   std::string filename = tmp.substr(start, tmp.find("\"", start) - start);
   std::size_t endPos = contentFile.find(boundary);
   contentFile = contentFile.substr(0, endPos - 2);
-  if (contentFile == "" || filename == "") {
-    res->setStatus(400, "Bad Request");
-    res->addHeader("Content-Type", "text/html");
-    res->setBody("<html><head><meta charset=\'UTF-8\'<head><body><h1>Requête invalide.<h1></body></html>");
-    std::ostringstream ss;
-	ss << res->getBody().size();
-	res->addHeader("Content-Length", ss.str());
-    return;
-  }
+	if (!isAlphanumeric(filename) || !isValidUtf8(contentFile)) {
+		res->setStatus(400, "Bad Request");
+		res->addHeader("Content-Type", "text/html");
+		res->setBody("<html><head><meta charset=\'UTF-8\'></head><body><h1>Nom de fichier invalide ou fichier binaire non autorisé</h1></body></html>");
+		std::ostringstream ss;
+		ss << res->getBody().size();
+		res->addHeader("Content-Length", ss.str());
+		return;
+	}
   std::ofstream tmpFile((_rootPath + "/uploads/" + filename).c_str(),
                         std::ofstream::binary);
   if (tmpFile.is_open()) {
-    std::cout << "Fichier ouvert" << std::endl;
     tmpFile.write(contentFile.c_str(), contentFile.size());
     tmpFile.close();
     Utils::stringToHTML(Utils::generateFileLinks(_rootPath + "/uploads"),

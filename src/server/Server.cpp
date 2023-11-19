@@ -6,7 +6,7 @@
 /*   By: gansard <gansard@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:05 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/18 21:17:39 by gansard          ###   ########.fr       */
+/*   Updated: 2023/11/19 18:57:54 by gansard          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,14 @@ void Server::_initialize() {
       std::cerr << "Error: Could not create socket." << std::endl;
       exit(EXIT_FAILURE);
     }
-
+	int flags = fcntl(listen_fd, F_GETFL, 0);
+	if (flags == -1) {
+      exit(EXIT_FAILURE);
+	}
+	flags = (flags | O_NONBLOCK);
+	if (fcntl(listen_fd, F_SETFL, flags) == -1) {
+      exit(EXIT_FAILURE);
+	}
     int opt = 1;
     if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) ==
         -1) {
@@ -147,6 +154,11 @@ void Server::_acceptNewConnection(int listen_fd) {
     perror("accept");
     return;
   }
+  int client_flags = fcntl(client_fd, F_GETFL, 0);
+  client_flags |= O_NONBLOCK;
+  if (fcntl(client_fd, F_SETFL, client_flags) == -1) {
+  	perror("no block flag");
+  }
   FD_SET(client_fd, &_readfds);
   _clients.push_back(client_fd);
   std::cout << "Nouvelle connexion acceptée : " << client_fd << std::endl;
@@ -159,43 +171,90 @@ void Server::_processClientRequest(int client_fd) {
 	ss2 << this->_config.getPorts().at(1);
 	std::string portStr = ss.str();
 	std::string port2Str = ss2.str();
-	//char buffer[10000] = "";
-	//int bytesRead = recv(client_fd, buffer, sizeof(buffer), 0);
-	//std::cout << "BYTESREAD : " << bytesRead << std::endl;
-	//if (bytesRead <= 0) {
-	//	if (bytesRead < 0) {
-	//	std::cerr << "Recv failed" << std::endl;
-	//	}
-	//	close(client_fd);
-	//	FD_CLR(client_fd, &_readfds);
-	//	// hypothese : c'est mal liberer
-	//	_clients.erase(std::remove(_clients.begin(), _clients.end(), client_fd),
-	//				_clients.end());
-	//	_clientsToClose.insert(client_fd);
-	//	return;
-	//}
-	//std::string message(buffer, bytesRead);
-	//std::cout << message << std::endl;
 	std::string message;
 	int bytesRead;
-	int i = 0;
+	int totalBytesRead = 0;
+	int contentLength = -1; // Valeur initiale indiquant que Content-Length n'est pas encore connu
+	bool validMethod = true;
+	std::string left;
+	// Lire l'en-tête
 	do {
 		char buffer[1024];
 		bytesRead = recv(client_fd, buffer, sizeof(buffer), 0);
-
-		if (bytesRead > 0) {
-			message.append(buffer, bytesRead);
-		} else if (bytesRead < 0) {
-			std::cerr << "Erreur lors de la réception des données" << std::endl;
-			FD_CLR(client_fd, &_readfds);
-			_clients.erase(std::remove(_clients.begin(), _clients.end(), client_fd),_clients.end());
-			_clientsToClose.insert(client_fd);
-			break;
+		if (bytesRead <= 0) {
+			if (bytesRead < 0 && (errno != EWOULDBLOCK && errno != EAGAIN)) {
+				std::cerr << "Erreur lors de la réception des données" << std::endl;
+				// Gérer l'erreur
+			}
+			break; // Pause ou fin de la connexion
 		}
-		i++;
-	} while (bytesRead < 5008);
+		message.append(buffer, bytesRead);
+		std::string tmp = message.substr(0, 10);
+		std::cout << "CATAL TMP : " << tmp << std::endl;
+		if(tmp.find("POST") == std::string::npos && tmp.find("GET") == std::string::npos && tmp.find("DELETE") == std::string::npos)
+		{
+			std::cout << "CATAL TPMP HANOUNAZDAS : " << tmp << std::endl;
+			contentLength = 0;
+			validMethod = false;
+			break ;
+		}
+		std::cout << "YAAAAAAAAAAAAAAAAAAAAASSSSSSSS" << std::endl;
+		std::cout << message << std::endl;
+		std::cout << "YAAAAAAAAAAAAAAAAAAAAASSSSSSSS" << std::endl;
+		// Vérifier si l'en-tête est complet
+		if (message.find("\r\n\r\n") != std::string::npos) {
+			size_t contentLengthPos = message.find("Content-Length:");
+			if (contentLengthPos != std::string::npos) {
+				size_t start = message.find(":", contentLengthPos) + 1; // Début de la valeur numérique
+				size_t end = message.find("\r\n", start); // Fin de la ligne
+				std::string contentLengthStr = message.substr(start, end - start);
+				std::istringstream iss(contentLengthStr);
+				if (!(iss >> contentLength)) {
+					std::cerr << "Invalid Content-Length: " << contentLengthStr << std::endl;
+				}
+				// logic 
+				left = message.substr(message.find("\r\n\r\n") + 4, std::string::npos);
+				totalBytesRead += left.length();
+			} else {
+				contentLength = 0; // Si Content-Length n'est pas trouvé, supposez qu'il n'y a pas de corps
+			}
+			break ;
+		}
+	} while (true);
+	while (totalBytesRead < contentLength) {
+		char buffer[1024];
+		bytesRead = recv(client_fd, buffer, sizeof(buffer), 0);
+		std::cout << "buffer : " << buffer << std::endl;
+		std::cout << "bytesRead : " << bytesRead << std::endl;
+		std::cout << "contentLength : " << contentLength << std::endl;
+		if (bytesRead <= 0) {
+			if (bytesRead < 0 && (errno != EWOULDBLOCK && errno != EAGAIN)) {
+				std::cerr << "Erreur lors de la réception des données" << std::endl;
+				break ;
+			}
+			continue; // Pause ou fin de la connexion
+		}
+		message.append(buffer, bytesRead);
+		totalBytesRead += bytesRead;
+		if(totalBytesRead > _config.getMaxBodySize())
+		{
+			std::cerr << "body shaming" << std::endl;
+			break ;
+		}
+	}
+	// Traiter le message complet ici
+	// ----------------------------------------
   // A FAIRE !! : check validité du format du message => pas de requetes HTTPS
   // ou autres formats
+	if (!validMethod) {
+    std::string error = "HTTP/1.1 400 Bad Request\r\n\r\n";
+    if (send(client_fd, error.c_str(), error.length(), 0) == -1) {
+      std::cerr << "Error: send failed." << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  	_clientsToClose.insert(client_fd);
+    return;
+  }
   Request request(message, this->_config.getMaxBodySize());
   bool validHost = false;
   for (std::vector<std::string>::const_iterator it =
@@ -211,8 +270,7 @@ void Server::_processClientRequest(int client_fd) {
       std::cerr << "Error: send failed." << std::endl;
       exit(EXIT_FAILURE);
     }
-    close(client_fd);
-    FD_CLR(client_fd, &_readfds);
+  	_clientsToClose.insert(client_fd);
     return;
   }
   std::cout << request << std::endl;

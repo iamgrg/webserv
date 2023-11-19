@@ -20,6 +20,7 @@ public:
   static void uploadFile(std::string const &body, std::string const &type,
                          Response *res, std::string const &_rootPath);
   static std::string toLower(std::string str);
+  static bool isValidUtf8(const std::string& str);
 };
 
 #endif // UTILS_HPP

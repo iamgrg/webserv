@@ -6,7 +6,7 @@
 /*   By: gansard <gansard@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:17:41 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/18 15:34:41 by gansard          ###   ########.fr       */
+/*   Updated: 2023/11/19 12:27:38 by gansard          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@
 # include <sys/types.h>
 # include <sys/stat.h>
 # include <algorithm>
+# include <fcntl.h>
 const std::string RED = "\033[31m";
 const std::string GREEN = "\033[32m";
 const std::string YELLOW = "\033[33m";
