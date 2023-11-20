@@ -31,6 +31,7 @@ public:
   std::vector<Location *> const &getLocations() const;
   std::string const &getRootPath() const;
   std::vector<int> const &getPorts() const;
+  std::vector<std::string> getPortsStr() const;
   std::vector<std::string> const &getNames() const;
   std::map<int, std::string> const &getErrorPages() const;
   int getMaxBodySize() const;

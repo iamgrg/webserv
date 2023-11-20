@@ -13,6 +13,15 @@ std::vector<Location *> const &Config::getLocations() const {
 }
 std::string const &Config::getRootPath() const { return this->_rootPath; }
 std::vector<int> const &Config::getPorts() const { return this->_ports; }
+std::vector<std::string> Config::getPortsStr() const {
+  std::vector<std::string> portsStr;
+    for (std::vector<int>::const_iterator it = this->_ports.begin(); it != this->_ports.end(); ++it) {
+        std::ostringstream ss;
+        ss << *it;
+        portsStr.push_back(ss.str());
+    }
+    return portsStr;
+}
 std::vector<std::string> const &Config::getNames() const {
   return this->_names;
 }

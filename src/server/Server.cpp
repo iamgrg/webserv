@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gansard <gansard@student.42.fr>            +#+  +:+       +#+        */
+/*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:05 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/19 18:57:54 by gansard          ###   ########.fr       */
+/*   Updated: 2023/11/20 10:04:34 by gregoire         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,6 +165,7 @@ void Server::_acceptNewConnection(int listen_fd) {
 }
 
 void Server::_processClientRequest(int client_fd) {
+  std::vector<std::string> portsStr = this->_config.getPortsStr();
 	std::ostringstream ss;
 	std::ostringstream ss2;
 	ss << this->_config.getPorts().at(0);
@@ -257,12 +258,12 @@ void Server::_processClientRequest(int client_fd) {
   }
   Request request(message, this->_config.getMaxBodySize());
   bool validHost = false;
-  for (std::vector<std::string>::const_iterator it =
-           this->_config.getNames().begin();
-       it != this->_config.getNames().end(); ++it) {
-    if (request.getHeader("Host") == *it + ":" + portStr ||
-        request.getHeader("Host") == *it + ":" + port2Str)
-      validHost = true;
+  for (std::vector<std::string>::const_iterator it = this->_config.getNames().begin();it != this->_config.getNames().end(); ++it) {
+    for(std::vector<std::string>::const_iterator it2 = portsStr.begin(); it2 != portsStr.end(); ++it2)
+    {
+      if (request.getHeader("Host") == *it + ":" + *it2)
+        validHost = true;
+    }
   }
   if (!validHost) {
     std::string error = "HTTP/1.1 400 Bad Request\r\n\r\n";
