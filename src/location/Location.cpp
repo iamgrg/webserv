@@ -9,20 +9,10 @@ Location::Location(std::string _path, std::vector<std::string> _methods,
 Location::~Location() {}
 
 std::string const &Location::getPath() const { return this->_path; }
-
-std::vector<std::string> const &Location::getMethods() const {
-  return this->_methods;
-}
-
-std::vector<std::string> const &Location::getFilesPath() const {
-  return this->_filesPath;
-}
-
+std::vector<std::string> const &Location::getMethods() const { return this->_methods;}
+std::vector<std::string> const &Location::getFilesPath() const { return this->_filesPath;}
 bool const &Location::getAutoindex() const { return this->_autoindex; }
-
-std::string const &Location::getRedirectPath() const {
-  return this->_redirectPath;
-}
+std::string const &Location::getRedirectPath() const {return this->_redirectPath;}
 
 Location const &Location::operator=(Location const &rhs) {
   if (this != &rhs) {

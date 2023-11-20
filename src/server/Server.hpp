@@ -6,7 +6,7 @@
 /*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:01 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/17 18:54:41 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/20 07:49:04 by gregoire         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,17 +28,14 @@ public:
 private:
   Config _config;
   Routes _routes;
-  // int _listen_fd;
   std::vector<int> _listen_fds;
   bool _isRunning;
-  // struct sockaddr_in _server_addr;
   fd_set _readfds;
   std::vector<int> _clients;
   std::set<int> _clientsToClose;
 
   void _sendResponse(Response const &response, int const &client);
   void _initialize();
-  // void _manageConnections();
   void _processClientRequest(int client_fd);
   void _acceptNewConnection(int listen_fd);
   void _handleRequests();

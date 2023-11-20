@@ -90,7 +90,8 @@ Response *Routes::_handleGet(std::vector<std::string> const &filesPath,
                              std::string const &redirectPath) {
   Response *res = new Response();
   if (redirectPath != "") {
-    res = _handleRedirect(redirectPath);
+    Response *res = _handleError(301);
+    res->addHeader("Location", redirectPath);
     return res;
   }
   for (std::vector<std::string>::const_iterator it = filesPath.begin();
@@ -131,16 +132,12 @@ Response *Routes::_handlePost(std::string const &body,
   return res;
 }
 
-Response *Routes::_handleCgi(Request const &request,
-                             std::string const &method) {
-  std::cout << "HANDLE CGI" << std::endl;
+Response *Routes::_handleCgi(Request const &request, std::string const &method) {
   Response *res = new Response();
   int execResult;
   if (method == "GET") {
     Cgi cgi;
     execResult = cgi.exec();
-    std::cout << execResult << std::endl;
-    std::cout << cgi.getHTMLstr() << std::endl;
     res->setBody(cgi.getHTMLstr());
   } else {
     Cgi cgi(request);
@@ -182,33 +179,6 @@ Response *Routes::_handleDelete(std::string const &query) {
   res = _handleError(403);
   return res;
 }
-
-Response *Routes::_handleRedirect(std::string const &newPath) {
-  Response *res = new Response();
-  std::cout << "HELLO FROM HANDLEREDIRECT" << std::endl;
-  res->setStatus(301, "Moved Permanently");
-  res->addHeader("Location", newPath);
-  res->addHeader("Content-Type", "text/html");
-  std::string body = "<html><head>\n"
-                     "<meta charset=\"UTF-8\">\n"
-                     "<title>301</title>\n"
-                     "</head>\n"
-                     "<body>\n"
-                     "<h1>301 Moved Permanently</h1>\n"
-                     "<p>The document has moved <a href=\"" +
-                     newPath +
-                     "\">here</a>.</p>\n"
-                     "</body></html>";
-  res->setBody(body);
-	std::ostringstream ss;
-	ss << res->getBody().size();
-	res->addHeader("Content-Length", ss.str());
-  return res;
-}
-
-#include <dirent.h> // Pour opendir(), readdir(), closedir()
-#include <sstream>  // Pour std::stringstream
-#include <string>
 
 Response *Routes::_handleAutoindex(std::string const &directoryPath) {
   Response *res = new Response();
@@ -252,7 +222,6 @@ Response *Routes::_handleError(int code) {
   msg[413] = "Payload Too Large";
   msg[500] = "Internal Server Error";
   res->addHeader("Content-Type", "text/html");
-  res->setStatus(code, msg[code]);
   res->setBody(res->fileToString(_rootPath + _errorPages[code]));
 	std::ostringstream ss;
 	ss << res->getBody().size();

@@ -51,10 +51,6 @@ void Request::parse(const std::string &rawRequest, int maxBodySize) {
 void Request::_parseRequestLine(const std::string &requestLine) {
   std::istringstream iss(requestLine);
   iss >> _method >> _url >> _httpVersion;
-  // Extraire la query string de l'URL
-  // vérifié que le requete n'est pas crypté
-  // if (_url.find("%") != std::string::npos)
-  //     _validRequest = false;
   std::size_t found = _url.find('?');
   if (found != std::string::npos) {
     _query = _url.substr(found + 1);

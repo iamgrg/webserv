@@ -69,5 +69,7 @@ int Cgi::exec() {
     close(pipefd[0]);
     waitpid(pid, NULL, 0);
   }
+  if(_HTMLstr.empty())
+    return 1;
   return 0;
 }
