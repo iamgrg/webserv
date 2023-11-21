@@ -14,10 +14,7 @@ Cgi::Cgi() {
   largest_cities.push_back("Osaka");
   largest_cities.push_back("Cairo");
   largest_cities.push_back("New York");
-  // Initialisation du générateur de nombres aléatoires
   std::srand(std::time(NULL));
-
-  // Sélection aléatoire d'une ville
   int random_index = std::rand() % largest_cities.size();
   this->_city = largest_cities[random_index];
 }
@@ -48,9 +45,8 @@ int Cgi::exec() {
     return 1;
   }
   if (pid == 0) {
-    // Processus enfant
-    close(pipefd[0]);               // Ferme le côté lecture du pipe
-    dup2(pipefd[1], STDOUT_FILENO); // Redirige STDOUT vers le pipe
+    close(pipefd[0]);          
+    dup2(pipefd[1], STDOUT_FILENO);
     close(pipefd[1]);
 
     char *argv[] = {(char *)"python", (char *)"./src/cgi/script.py",
@@ -59,8 +55,7 @@ int Cgi::exec() {
     std::cerr << "Échec de l'execution du script" << std::endl;
     exit(1);
   } else {
-    // Processus parent
-    close(pipefd[1]); // Ferme le côté écriture du pipe
+    close(pipefd[1]);
     char buffer[4096];
     ssize_t nbytes;
     while ((nbytes = read(pipefd[0], buffer, sizeof(buffer))) > 0) {

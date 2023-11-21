@@ -153,7 +153,6 @@ void Config::_parseConfig(std::string const &configPath) {
           std::string ext;
           iss >> ext >> scriptPath;
           std::string path = "/cgi" + ext;
-          std::cout << "path: " << path << std::endl;
           _pathCGI = scriptPath;
           filesPath.push_back(scriptPath);
           Location *location =

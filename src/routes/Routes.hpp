@@ -24,7 +24,7 @@ private:
 public:
   Routes(Config const &config);
   ~Routes();
-  Response const &handle(Request const &request);
+  Response *handle(Request const &request);
   bool isHTTPMethod(std::string const &httpRequest);
 };
 

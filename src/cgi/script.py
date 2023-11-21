@@ -3,7 +3,6 @@ import sys
 import requests
 
 def get_weather(city, api_key):
-    """Récupère les données météorologiques pour une ville donnée."""
     api_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
     try:
         response = requests.get(api_url)
@@ -33,7 +32,6 @@ def generate_html(city, temp, weather):
 </html>"""
 
 def generate_error_html(city):
-    """Génère une page HTML d'erreur."""
     return f"""<!DOCTYPE html>
 <html>
 <head>

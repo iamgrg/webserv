@@ -3,20 +3,24 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
+/*   By: gansard <gansard@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:05 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/20 10:04:34 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/21 12:13:57 by gansard          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-Server::Server(Config const &config) : _config(config), _routes(config) {
+Server* Server::instance = NULL;
+
+Server::Server(Config *config) : _config(*config),_ptrConfig(config), _routes(*config){
+	instance = this;
   _initialize();
 }
+//================================================================================================// 
 Server::~Server() {}
-
+//================================================================================================// 
 void Server::_initialize() {
   std::vector<int>::const_iterator it;
   for (it = _config.getPorts().begin(); it != _config.getPorts().end(); ++it) {
@@ -35,19 +39,16 @@ void Server::_initialize() {
       exit(EXIT_FAILURE);
 	}
     int opt = 1;
-    if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) ==
-        -1) {
+    if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
       std::cerr << "Error: setsockopt failed." << std::endl;
       close(listen_fd);
       exit(EXIT_FAILURE);
     }
-
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = inet_addr(_config.getHost().c_str());
     server_addr.sin_port = htons(port);
-
     if (bind(listen_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
       std::cerr << "Error: bind failed." << std::endl;
       close(listen_fd);
@@ -62,29 +63,7 @@ void Server::_initialize() {
     _listen_fds.push_back(listen_fd);
   }
 }
-
-void Server::start() {
-  _isRunning = true;
-  std::cout << "Server started and listening on port "
-            << this->_config.getPorts().at(0) << "..." << std::endl;
-  while (_isRunning) {
-    _handleRequests();
-  }
-}
-
-void Server::stop() {
-  _isRunning = false;
-  for (std::vector<int>::iterator it = _listen_fds.begin();
-       it != _listen_fds.end(); ++it) {
-    close(*it);
-  }
-  for (std::vector<int>::iterator it = _clients.begin(); it != _clients.end();
-       ++it) {
-    close(*it);
-  }
-  std::cout << "Server stopped" << std::endl;
-}
-
+//================================================================================================// 
 void Server::_handleRequests() {
   int max_fd = 0;
   std::set<int>::iterator fd;
@@ -114,15 +93,16 @@ void Server::_handleRequests() {
   }
   _clientsToClose.clear();
 }
-
-void Server::_sendResponse(Response const &response, int const &client) {
-  std::string responseString = response.buildResponse();
+//================================================================================================// 
+void Server::_sendResponse(Response *response, int const &client) {
+  std::string responseString = response->buildResponse();
+  delete response;
   if (send(client, responseString.c_str(), responseString.length(), 0) == -1) {
     std::cerr << "Error: send failed." << std::endl;
     exit(EXIT_FAILURE);
   }
 }
-
+//================================================================================================// 
 void Server::_prepareSocketSet(int &max_fd) {
   FD_ZERO(&_readfds);
 
@@ -145,7 +125,7 @@ void Server::_prepareSocketSet(int &max_fd) {
     }
   }
 }
-
+//================================================================================================// 
 void Server::_acceptNewConnection(int listen_fd) {
   struct sockaddr_in client_addr;
   socklen_t addrlen = sizeof(client_addr);
@@ -163,7 +143,7 @@ void Server::_acceptNewConnection(int listen_fd) {
   _clients.push_back(client_fd);
   std::cout << "Nouvelle connexion acceptée : " << client_fd << std::endl;
 }
-
+//================================================================================================// 
 void Server::_processClientRequest(int client_fd) {
   std::vector<std::string> portsStr = this->_config.getPortsStr();
 	std::ostringstream ss;
@@ -191,17 +171,12 @@ void Server::_processClientRequest(int client_fd) {
 		}
 		message.append(buffer, bytesRead);
 		std::string tmp = message.substr(0, 10);
-		std::cout << "CATAL TMP : " << tmp << std::endl;
 		if(tmp.find("POST") == std::string::npos && tmp.find("GET") == std::string::npos && tmp.find("DELETE") == std::string::npos)
 		{
-			std::cout << "CATAL TPMP HANOUNAZDAS : " << tmp << std::endl;
 			contentLength = 0;
 			validMethod = false;
 			break ;
 		}
-		std::cout << "YAAAAAAAAAAAAAAAAAAAAASSSSSSSS" << std::endl;
-		std::cout << message << std::endl;
-		std::cout << "YAAAAAAAAAAAAAAAAAAAAASSSSSSSS" << std::endl;
 		// Vérifier si l'en-tête est complet
 		if (message.find("\r\n\r\n") != std::string::npos) {
 			size_t contentLengthPos = message.find("Content-Length:");
@@ -213,11 +188,10 @@ void Server::_processClientRequest(int client_fd) {
 				if (!(iss >> contentLength)) {
 					std::cerr << "Invalid Content-Length: " << contentLengthStr << std::endl;
 				}
-				// logic 
 				left = message.substr(message.find("\r\n\r\n") + 4, std::string::npos);
 				totalBytesRead += left.length();
 			} else {
-				contentLength = 0; // Si Content-Length n'est pas trouvé, supposez qu'il n'y a pas de corps
+				contentLength = 0;
 			}
 			break ;
 		}
@@ -225,16 +199,8 @@ void Server::_processClientRequest(int client_fd) {
 	while (totalBytesRead < contentLength) {
 		char buffer[1024];
 		bytesRead = recv(client_fd, buffer, sizeof(buffer), 0);
-		std::cout << "buffer : " << buffer << std::endl;
-		std::cout << "bytesRead : " << bytesRead << std::endl;
-		std::cout << "contentLength : " << contentLength << std::endl;
-		if (bytesRead <= 0) {
-			if (bytesRead < 0 && (errno != EWOULDBLOCK && errno != EAGAIN)) {
-				std::cerr << "Erreur lors de la réception des données" << std::endl;
-				break ;
-			}
-			continue; // Pause ou fin de la connexion
-		}
+		if (bytesRead <= 0)
+			continue;
 		message.append(buffer, bytesRead);
 		totalBytesRead += bytesRead;
 		if(totalBytesRead > _config.getMaxBodySize())
@@ -243,10 +209,9 @@ void Server::_processClientRequest(int client_fd) {
 			break ;
 		}
 	}
-	// Traiter le message complet ici
 	// ----------------------------------------
-  // A FAIRE !! : check validité du format du message => pas de requetes HTTPS
-  // ou autres formats
+	// A FAIRE !! : check validité du format du message => pas de requetes HTTPS
+	// ou autres formats
 	if (!validMethod) {
     std::string error = "HTTP/1.1 400 Bad Request\r\n\r\n";
     if (send(client_fd, error.c_str(), error.length(), 0) == -1) {
@@ -275,7 +240,34 @@ void Server::_processClientRequest(int client_fd) {
     return;
   }
   std::cout << request << std::endl;
-  Response response = _routes.handle(request);
+  Response *response = _routes.handle(request);
   this->_sendResponse(response, client_fd);
   _clientsToClose.insert(client_fd);
+}
+//================================================================================================// 
+void Server::start() {
+  _isRunning = true;
+  std::cout << "Server started..." << std::endl;
+  while (_isRunning) {
+    _handleRequests();
+  }
+}
+//================================================================================================// 
+void Server::realStop() {
+  _isRunning = false;
+  for (std::vector<int>::iterator it = _listen_fds.begin();
+       it != _listen_fds.end(); ++it) {
+    close(*it);
+  }
+  for (std::vector<int>::iterator it = _clients.begin(); it != _clients.end();
+       ++it) {
+    close(*it);
+  }
+  std::vector<Location *> tmp = _ptrConfig->getLocations();
+	std::vector<Location *>::iterator it;
+	for(it = tmp.begin(); it != tmp.end(); it++)
+		delete (*it);
+  delete _ptrConfig;
+  delete (this);
+  std::cout << std::endl << "Server stopped" << std::endl;
 }

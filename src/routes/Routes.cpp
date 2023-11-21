@@ -35,11 +35,11 @@ bool Routes::isHTTPMethod(std::string const &httpRequest) {
   return (httpVersion == "HTTP/1.1");
 }
 
-Response const &Routes::handle(Request const &request) {
+Response *Routes::handle(Request const &request) {
   Response *res;
   if (!request.isValid()) {
     res = _handleError(413);
-    return *res;
+    return res;
   }
   std::vector<Location *>::iterator it = this->_locations.begin();
   while (it != this->_locations.end()) {
@@ -49,9 +49,9 @@ Response const &Routes::handle(Request const &request) {
         if ((*it)->getAutoindex() &&
             !(Utils::fileExists(_rootPath + (*it)->getPath() + "index.html"))) {
           if (request.getMethod() != "GET")
-            return *_handleError(405);
+            return (_handleError(405));
           res = this->_handleAutoindex(_rootPath + (*it)->getPath());
-          return *res;
+          return res;
         }
         if (request.getMethod() == "GET") {
           if (request.getUrl() == "/cgi.py")
@@ -60,13 +60,13 @@ Response const &Routes::handle(Request const &request) {
             res = Utils::downloadFile(request.getQuery(), _rootPath);
           else
             res = this->_handleGet((*it)->getFilesPath(), (*it)->getRedirectPath());
-          return *res;
+          return res;
         } else if (request.getMethod() == "POST") {
           if (request.getUrl() == "/cgi.py")
             res = this->_handleCgi(request, "POST");
           else
             res = this->_handlePost(request.getBody(), request.getContentType());
-          return *res;
+          return res;
         } else if (request.getMethod() == "DELETE") {
           if (request.getQuery() != "")
             res = this->_handleDelete(request.getQuery());
@@ -74,16 +74,16 @@ Response const &Routes::handle(Request const &request) {
             res = _handleError(400);
         } else
           res = _handleError(405);
-        return *res;
+        return res;
       } else {
         res = _handleError(405);
-        return *res;
+        return res;
       }
     }
     it++;
   }
   res = _handleError(404);
-  return *res;
+  return res;
 }
 
 Response *Routes::_handleGet(std::vector<std::string> const &filesPath,
