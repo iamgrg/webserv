@@ -14,6 +14,8 @@ private:
   std::string _rootPath;
   std::map<std::string, std::string> _macrosType;
   std::map<int, std::string> _errorPages;
+  std::vector<int> _ports;
+  std::string _host;
   Response *_handleGet(std::vector<std::string> const &filesPath, std::string const &redirectPath);
   Response *_handlePost(std::string const &body, std::string const &type);
   Response *_handleDelete(std::string const &query);
@@ -23,9 +25,12 @@ private:
 
 public:
   Routes(Config const &config);
+  Routes();
   ~Routes();
   Response *handle(Request const &request);
   bool isHTTPMethod(std::string const &httpRequest);
+  std::vector<int> const &getPorts() const;
+  std::string const &getHost() const;
 };
 
 #endif // ROUTES_HPP

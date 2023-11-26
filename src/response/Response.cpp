@@ -46,3 +46,22 @@ std::string const Response::fileToString(const std::string &filePath) {
   buffer << fileStream.rdbuf();
   return buffer.str();
 }
+
+  std::vector<std::string> Response::getHeaders() const{
+    std::vector<std::string> headers;
+    for (std::map<std::string, std::string>::const_iterator it = _headers.begin(); it != _headers.end(); ++it) {
+      headers.push_back(it->first + ": " + it->second);
+    }
+    return headers;
+  }
+
+std::ostream &operator<<(std::ostream &os, const Response &response) {
+    os << GREEN << "Status Line: " << RESET << response._statusLine << "\n" 
+       << YELLOW << "Headers:" << RESET << "\n";
+    std::vector<std::string> headers = response.getHeaders();
+    for (std::vector<std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
+        os << CYAN << *it << "  "  << "\n";
+    }
+    os << BLUE << "Body:\n" << RESET << response._body;
+    return os;
+}

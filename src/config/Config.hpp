@@ -17,13 +17,14 @@ private:
   std::vector<Location *> _locations;
 
   // Méthodes privées
-  void _parseConfig(std::string const &configPath);
+  void _parseConfig(std::stringstream &serverBlockStream);
   void _parseLocationBlock(std::stringstream &locationBlockStream);
   void _createErrorPages();
 
 public:
   // Constructeur & Destructeur
-  Config(std::string const &configPath);
+  Config(std::stringstream &serverBlockStream);
+  Config();
   ~Config();
 
   // Getters

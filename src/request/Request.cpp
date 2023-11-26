@@ -116,6 +116,18 @@ std::string Request::getHeader(const std::string &headerName) const {
   return "";
 }
 
+int Request::getPort() const {
+  std::string hostHeader = getHeader("Host");
+  std::size_t colonPos = hostHeader.find(":");
+  if (colonPos != std::string::npos) {
+    int port;
+    std::istringstream(hostHeader.substr(colonPos + 1)) >> port;
+    return port;
+  }
+  return 80; // Retourne le port par défaut si non spécifié
+}
+
+
 std::ostream &operator<<(std::ostream &os, const Request &req) {
   const std::string border =
       "------------------------------------------------\n";

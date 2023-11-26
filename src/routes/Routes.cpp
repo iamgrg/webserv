@@ -6,16 +6,16 @@ Routes::Routes(Config const &config)
       _errorPages(config.getErrorPages()) {
   _macrosType["FORM"] = "application/x-www-form-urlencoded";
   _macrosType["UPLOAD"] = "multipart/form-data";
+  _ports = config.getPorts();
+  _host = config.getHost();
 }
+Routes::Routes() {}
 Routes::~Routes() {}
 
 bool Routes::isHTTPMethod(std::string const &httpRequest) {
   std::istringstream requestStream(httpRequest);
   std::string startLine;
   std::getline(requestStream, startLine);
-
-  // Vérifier si la requête semble être cryptée (par exemple, contient des
-  // caractères non imprimables)
   for (std::string::const_iterator it = startLine.begin();
        it != startLine.end(); ++it) {
     if (!isprint(*it)) {
@@ -44,10 +44,9 @@ Response *Routes::handle(Request const &request) {
   std::vector<Location *>::iterator it = this->_locations.begin();
   while (it != this->_locations.end()) {
     if (request.getUrl() == (*it)->getPath()) {
-      if (std::find((*it)->getMethods().begin(), (*it)->getMethods().end(),
-                    request.getMethod()) != (*it)->getMethods().end()) {
-        if ((*it)->getAutoindex() &&
-            !(Utils::fileExists(_rootPath + (*it)->getPath() + "index.html"))) {
+      if (std::find((*it)->getMethods().begin(), (*it)->getMethods().end(), request.getMethod()) != (*it)->getMethods().end()) {
+        std::vector<std::string>::const_iterator it2 = std::find((*it)->getFilesPath().begin(), (*it)->getFilesPath().end(), "index.html");
+        if ((*it)->getAutoindex() && it2 == (*it)->getFilesPath().end()) {
           if (request.getMethod() != "GET")
             return (_handleError(405));
           res = this->_handleAutoindex(_rootPath + (*it)->getPath());
@@ -86,8 +85,7 @@ Response *Routes::handle(Request const &request) {
   return res;
 }
 
-Response *Routes::_handleGet(std::vector<std::string> const &filesPath,
-                             std::string const &redirectPath) {
+Response *Routes::_handleGet(std::vector<std::string> const &filesPath, std::string const &redirectPath) {
   Response *res = new Response();
   if (redirectPath != "") {
     Response *res = _handleError(301);
@@ -165,14 +163,13 @@ Response *Routes::_handleDelete(std::string const &query) {
     if (remove(("www/uploads/" + query).c_str()) != 0)
       res = _handleError(404);
     else {
-      Utils::stringToHTML(Utils::generateFileLinks("www/uploads/"), _rootPath,
-                          "download.html");
+      Utils::stringToHTML(Utils::generateFileLinks("www/uploads/"), _rootPath, "download.html");
       res->setStatus(200, "OK");
       res->addHeader("Content-Type", "text/html");
       res->setBody(res->fileToString("www/dowload.html"));
-	std::ostringstream ss;
-	ss << res->getBody().size();
-	res->addHeader("Content-Length", ss.str());
+      std::ostringstream ss;
+      ss << res->getBody().size();
+      res->addHeader("Content-Length", ss.str());
     }
     return res;
   }
@@ -221,6 +218,7 @@ Response *Routes::_handleError(int code) {
   msg[405] = "Method Not Allowed";
   msg[413] = "Payload Too Large";
   msg[500] = "Internal Server Error";
+  res->setStatus(code, msg[code]);
   res->addHeader("Content-Type", "text/html");
   res->setBody(res->fileToString(_rootPath + _errorPages[code]));
 	std::ostringstream ss;
@@ -228,3 +226,6 @@ Response *Routes::_handleError(int code) {
 	res->addHeader("Content-Length", ss.str());
   return res;
 }
+
+std::vector<int> const &Routes::getPorts() const { return _ports; }
+std::string const &Routes::getHost() const { return _host; }

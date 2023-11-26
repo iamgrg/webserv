@@ -29,6 +29,7 @@ public:
   std::string getHeader(const std::string &headerName) const;
   std::string getBody() const;
   std::string getContentType() const;
+  int getPort() const;
   bool isValid() const;
 
   // Helper functions

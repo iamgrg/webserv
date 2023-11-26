@@ -1,12 +1,12 @@
 #include "Config.hpp"
 
-Config::Config(std::string const &configPath) {
-  _parseConfig(configPath);
+Config::Config(std::stringstream &serverBlockStream) {
+  _parseConfig(serverBlockStream);
   _createErrorPages();
   _names.push_back("127.0.0.1");
 }
-
 Config::~Config() {}
+Config::Config() { }
 std::string const &Config::getHost() const { return this->_host; }
 std::vector<Location *> const &Config::getLocations() const {
   return this->_locations;
@@ -31,20 +31,14 @@ std::map<int, std::string> const &Config::getErrorPages() const {
 int Config::getMaxBodySize() const { return this->_maxBodySize; }
 std::string Config::getPathCGI() const { return this->_pathCGI; }
 
-void Config::_parseConfig(std::string const &configPath) {
-  std::ifstream configFile(configPath.c_str());
+void Config::_parseConfig(std::stringstream &serverBlockStream) {
   std::string line;
   int lineNumber = 0;
   bool insideServerBlock = false;
   bool insideLocationBlock = false;
   std::stringstream locationBlockStream;
 
-  if (!configFile.is_open()) {
-    throw std::runtime_error(
-        "Impossible d'ouvrir le fichier de configuration : " + configPath);
-  }
-
-  while (std::getline(configFile, line)) {
+  while (std::getline(serverBlockStream, line)) {
     lineNumber++;
 
     // ================= check line ================= //
@@ -139,12 +133,12 @@ void Config::_parseConfig(std::string const &configPath) {
           iss >> rootPath;
           rootPath = rootPath.substr(0, rootPath.size() - 1);
           _rootPath = rootPath;
-        } else if (key == "host") {
+          } else if (key == "host") {
           std::string host;
           iss >> host;
           host = host.substr(0, host.size() - 1);
           _host = host;
-        } else if (key == "cgi") {
+          } else if (key == "cgi") {
           std::vector<std::string> methods;
           std::vector<std::string> filesPath;
           methods.push_back("GET");
@@ -156,20 +150,17 @@ void Config::_parseConfig(std::string const &configPath) {
           _pathCGI = scriptPath;
           filesPath.push_back(scriptPath);
           Location *location =
-              new Location(path, methods, filesPath, false, "");
+              new Location(path, methods, filesPath, false, ""); 
           _locations.push_back(location);
-        } else
-		{
-			std::ostringstream ss;
-			ss << lineNumber;
-			std::string lineNumberStr = ss.str();
-			throw std::runtime_error("Erreur de syntaxe à la ligne " +
-				lineNumberStr + ": directive inconnue '" + key + "'");
-		}
+          } else {
+          std::ostringstream ss;
+          ss << lineNumber;
+          std::string lineNumberStr = ss.str();
+          throw std::runtime_error("Erreur de syntaxe à la ligne " + lineNumberStr + ": directive inconnue '" + key + "'");
+		    }
       }
     }
   }
-  configFile.close();
 }
 
 void Config::_parseLocationBlock(std::stringstream &locationBlockStream) {
