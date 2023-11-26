@@ -268,6 +268,16 @@ void Utils::uploadFile(std::string const &body, std::string const &type,
                         std::ofstream::binary);
   if (tmpFile.is_open()) {
     tmpFile.write(contentFile.c_str(), contentFile.size());
+    if(tmpFile.bad()){
+      res->setStatus(500, "Internal Server Error");
+      res->addHeader("Content-Type", "text/html");
+      res->setBody(
+          "<html><body>Erreur lors de l'upload du fichier.</body></html>");
+      std::ostringstream ss;
+      ss << res->getBody().size();
+      res->addHeader("Content-Length", ss.str());
+      return;
+    }
     tmpFile.close();
     Utils::stringToHTML(Utils::generateFileLinks(_rootPath + "/uploads"),
                         _rootPath, "download.html");

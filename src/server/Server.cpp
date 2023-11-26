@@ -6,7 +6,7 @@
 /*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:05 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/26 09:39:44 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/26 14:52:19 by gregoire         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,11 +110,9 @@ void Server::_splitServerBlocks(const std::string &configPath) {
     std::string line;
     bool insideServerBlock = false;
     std::stringstream *currentBlock = NULL;
-
     if (!configFile.is_open()) {
         throw std::runtime_error("Impossible d'ouvrir le fichier de configuration : " + configPath);
     }
-
     while (std::getline(configFile, line)) {
         if (line == "server {") {
             insideServerBlock = true;
@@ -129,7 +127,6 @@ void Server::_splitServerBlocks(const std::string &configPath) {
             currentBlock = NULL; // Important pour éviter de réutiliser accidentellement le même pointeur
         }
     }
-
     if (currentBlock) {
         delete currentBlock; // Nettoyage dans le cas où la dernière accolade fermante manque
     }
@@ -145,22 +142,37 @@ void Server::start() {
   }
 }
 //================================================================================================// 
+void Server::_sendResponseIfReady(int client_fd) {
+    // Vérifiez si une réponse est prête pour ce client et l'envoyez
+    std::map<int, Response*>::iterator response_it = _responses.find(client_fd);
+    if (response_it != _responses.end()) {
+        Response *response = response_it->second;
+        _sendResponse(response, client_fd);
+        _responses.erase(response_it);
+        _clientsToClose.insert(client_fd);
+    }
+}
+//================================================================================================// 
 void Server::_handleRequests() {
   int max_fd = 0;
   std::set<int>::iterator fd;
   _prepareSocketSet(max_fd);
 
-  fd_set tmpfds = _readfds;
-  if (select(max_fd + 1, &tmpfds, NULL, NULL, NULL) < 0) 
+  fd_set tmp_readfds = _readfds;
+  fd_set tmp_writefds = _writefds;
+  if (select(max_fd + 1, &tmp_readfds, &tmp_writefds, NULL, NULL) < 0) 
     return ;
 
   for (int i = 0; i <= max_fd; ++i) {
-    if (FD_ISSET(i, &tmpfds)) {
+    if (FD_ISSET(i, &tmp_readfds)) {
       if (std::find(_listen_fds.begin(), _listen_fds.end(), i) != _listen_fds.end()) {
         _acceptNewConnection(i);
       } else {
         _processClientRequest(i);
       }
+    }
+    if (FD_ISSET(i, &tmp_writefds)) {
+      _sendResponseIfReady(i);
     }
   }
   for (fd = _clientsToClose.begin(); fd != _clientsToClose.end(); ++fd) {
@@ -173,13 +185,12 @@ void Server::_handleRequests() {
 //================================================================================================//
 void Server::_prepareSocketSet(int &max_fd) {
   FD_ZERO(&_readfds);
-
+  FD_ZERO(&_writefds);
   // Ajouter les sockets d'écoute à _readfds
   for (std::vector<int>::iterator it = _listen_fds.begin(); it != _listen_fds.end(); ++it) {
     FD_SET(*it, &_readfds);
     max_fd = std::max(max_fd, *it);
   }
-
   // Ajouter les sockets clients valides à _readfds
   std::vector<int>::iterator it = _clients.begin();
   while (it != _clients.end()) {
@@ -191,14 +202,27 @@ void Server::_prepareSocketSet(int &max_fd) {
       it = _clients.erase(it); // Supprimez les descripteurs invalides
     }
   }
+  // Ajouter les sockets clients valides à _writefds
+    std::map<int, Response*>::iterator response_it = _responses.begin();
+    for(; response_it != _responses.end(); ++response_it) {
+        int client_fd = response_it->first;
+        FD_SET(client_fd, &_writefds);
+        max_fd = std::max(max_fd, client_fd);
+    }
 }
 //================================================================================================// 
 void Server::_sendResponse(Response *response, int const &client) {
   std::string responseString = response->buildResponse();
+  std::cout << "Sending response to client " << client << " : " << std::endl;
+  std::cout << *response << std::endl; 
   delete response;
-  if (send(client, responseString.c_str(), responseString.length(), 0) == -1) {
-    std::cerr << "Error: send failed." << std::endl;
-    exit(EXIT_FAILURE);
+  ssize_t bytesSent = send(client, responseString.c_str(), responseString.length(), 0);
+  if (bytesSent == -1) {
+      std::cerr << "Error: send failed with errno " << errno << std::endl;
+      exit(EXIT_FAILURE);
+  } else if (bytesSent == 0) {
+      std::cerr << "Connection closed by peer." << std::endl;
+      exit(EXIT_FAILURE);
   }
 }
 //================================================================================================// 
@@ -224,7 +248,6 @@ Routes* Server::findMatchingRoute(const Request& request) {
   std::string hostHeader = request.getHeader("Host");
   std::string requestHost;
   int requestPort = 80; // Utilise le port par défaut HTTP si aucun port n'est spécifié
-
   // Extraire le host et le port du header Host
   std::size_t colonPos = hostHeader.find(":");
   if (colonPos != std::string::npos) {
@@ -233,7 +256,6 @@ Routes* Server::findMatchingRoute(const Request& request) {
   } else {
     requestHost = hostHeader; // Si aucun port n'est spécifié, utilise le host tel quel
   }
-
   for (std::vector<Routes*>::const_iterator it = _routesS.begin(); it != _routesS.end(); ++it) {
     Routes* route = *it;
     if (route->getHost() == requestHost) {
@@ -247,91 +269,82 @@ Routes* Server::findMatchingRoute(const Request& request) {
   }
   return NULL; // Aucune route correspondante trouvée
 }
-//================================================================================================// 
+//================================================================================================//
 void Server::_processClientRequest(int client_fd) {
-  std::vector<std::string> portsStr = this->_config.getPortsStr();
 	std::string message;
 	int bytesRead;
 	int totalBytesRead = 0;
 	int contentLength = -1; // Valeur initiale indiquant que Content-Length n'est pas encore connu
-	bool validMethod = true;
-	std::string left;
-	// Lire l'en-tête
-	do {
-		char buffer[1024];
-		bytesRead = recv(client_fd, buffer, sizeof(buffer), 0);
-		if (bytesRead <= 0) {
-			if (bytesRead < 0 && (errno != EWOULDBLOCK && errno != EAGAIN)) {
-				std::cerr << "Erreur lors de la réception des données" << std::endl;
-				// Gérer l'erreur
-			}
-			break; // Pause ou fin de la connexion
-		}
-		message.append(buffer, bytesRead);
-		std::string tmp = message.substr(0, 10);
-		if(tmp.find("POST") == std::string::npos && tmp.find("GET") == std::string::npos && tmp.find("DELETE") == std::string::npos)
-		{
-			contentLength = 0;
-			validMethod = false;
-			break ;
-		}
-		// Vérifier si l'en-tête est complet
-		if (message.find("\r\n\r\n") != std::string::npos) {
-			size_t contentLengthPos = message.find("Content-Length:");
-			if (contentLengthPos != std::string::npos) {
-				size_t start = message.find(":", contentLengthPos) + 1; // Début de la valeur numérique
-				size_t end = message.find("\r\n", start); // Fin de la ligne
-				std::string contentLengthStr = message.substr(start, end - start);
-				std::istringstream iss(contentLengthStr);
-				if (!(iss >> contentLength)) {
-					std::cerr << "Invalid Content-Length: " << contentLengthStr << std::endl;
-				}
-				left = message.substr(message.find("\r\n\r\n") + 4, std::string::npos);
-				totalBytesRead += left.length();
-			} else {
-				contentLength = 0;
-			}
-			break ;
-		}
-	} while (true);
+	bool validMethod;
+  message = _readHttpRequestHeader(client_fd, validMethod, contentLength, totalBytesRead);
 	while (totalBytesRead < contentLength) {
 		char buffer[1024];
 		bytesRead = recv(client_fd, buffer, sizeof(buffer), 0);
-		if (bytesRead <= 0)
+		if (bytesRead == 0 || bytesRead == -1)
 			continue;
 		message.append(buffer, bytesRead);
 		totalBytesRead += bytesRead;
-		if(totalBytesRead > _config.getMaxBodySize())
-		{
-			std::cerr << "body shaming" << std::endl;
-			break ;
-		}
+		if(totalBytesRead > _config.getMaxBodySize()) {std::cerr << "body shaming" << std::endl; break ;}
 	}
-	if (!validMethod) {
-    std::string error = "HTTP/1.1 400 Bad Request\r\n\r\n";
-    if (send(client_fd, error.c_str(), error.length(), 0) == -1) {
-      std::cerr << "Error: send failed." << std::endl;
-      exit(EXIT_FAILURE);
-    }
-  	_clientsToClose.insert(client_fd);
-    return;
-  }
+	if (!validMethod) {_sendBadRequest(client_fd); return;}
   Request request(message, this->_config.getMaxBodySize());
-  // Diviser la fonction ici, renvoyer a la request et mettre le block du bas dans une fonction "response" qui
-  // sera appelée dans handleRequest sous condition de FD_ISSET sur write valid
   Routes* matchingRoute = findMatchingRoute(request);
   if (matchingRoute) {
-    Response *response = matchingRoute->handle(request);
-    this->_sendResponse(response, client_fd);
-  } else {
+      Response *response = matchingRoute->handle(request);
+      _responses[client_fd] = response; // Stockez la réponse pour l'envoyer plus tard
+      FD_SET(client_fd, &_writefds); // Marquez ce socket pour la surveillance de l'écriture
+  } else {_sendBadRequest(client_fd);}
+}
+//================================================================================================//
+std::string Server::_readHttpRequestHeader(int client_fd, bool &validMethod, int &contentLength, int &totalBytesRead) {
+    std::string message;
+    int bytesRead;
+    std::string left;
+    validMethod = true;
+    while (true) {
+        char buffer[1024];
+        bytesRead = recv(client_fd, buffer, sizeof(buffer), 0);
+        if (bytesRead == 0 || bytesRead == -1) {
+            break;
+        }
+        message.append(buffer, bytesRead);
+        if (totalBytesRead == 0) {
+            std::string tmp = message.substr(0, bytesRead > 10 ? 10 : bytesRead);
+            if (tmp.find("POST") == std::string::npos && tmp.find("GET") == std::string::npos && tmp.find("DELETE") == std::string::npos) {
+                validMethod = false;
+                break;
+            }
+        }
+        size_t endOfHeader = message.find("\r\n\r\n");
+        if (endOfHeader != std::string::npos) {
+            size_t contentLengthPos = message.find("Content-Length:");
+            if (contentLengthPos != std::string::npos) {
+                size_t start = message.find(':', contentLengthPos) + 1;
+                size_t end = message.find("\r\n", start);
+                std::istringstream iss(message.substr(start, end - start));
+                iss >> contentLength;
+                left = message.substr(endOfHeader + 4);
+                totalBytesRead += left.length();
+            } else {
+                contentLength = 0;
+            }
+            break;
+        }
+    }
+    return message;
+}
+//================================================================================================//
+void Server::_sendBadRequest(int client_fd) {
     std::string error = "HTTP/1.1 400 Bad Request\r\n\r\n";
-    if (send(client_fd, error.c_str(), error.length(), 0) == -1) {
+    ssize_t bytesSent = send(client_fd, error.c_str(), error.length(), 0);
+    if (bytesSent == -1) {
       std::cerr << "Error: send failed." << std::endl;
       exit(EXIT_FAILURE);
+    } else if (bytesSent == 0) {
+      std::cerr << "Connection closed by peer." << std::endl;
+      exit(EXIT_FAILURE);
     }
-    std::cout << "Invalid host or port" << std::endl;
-  }
-  _clientsToClose.insert(client_fd);
+    _clientsToClose.insert(client_fd);
 }
 //================================================================================================// 
 void Server::realStop() {

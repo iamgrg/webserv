@@ -45,8 +45,8 @@ Response *Routes::handle(Request const &request) {
   while (it != this->_locations.end()) {
     if (request.getUrl() == (*it)->getPath()) {
       if (std::find((*it)->getMethods().begin(), (*it)->getMethods().end(), request.getMethod()) != (*it)->getMethods().end()) {
-        std::vector<std::string>::const_iterator it2 = std::find((*it)->getFilesPath().begin(), (*it)->getFilesPath().end(), "index.html");
-        if ((*it)->getAutoindex() && it2 == (*it)->getFilesPath().end()) {
+        // std::vector<std::string>::const_iterator it2 = std::find((*it)->getFilesPath().begin(), (*it)->getFilesPath().end(), "index.html");
+        if ((*it)->getAutoindex() && (*it)->getFilesPath().empty()) {
           if (request.getMethod() != "GET")
             return (_handleError(405));
           res = this->_handleAutoindex(_rootPath + (*it)->getPath());
