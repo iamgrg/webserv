@@ -110,8 +110,11 @@ void Config::_parseConfig(std::stringstream &serverBlockStream) {
 			      std::istringstream(portstr) >> port;
             if(std::find(_ports.begin(), _ports.end(), port) == _ports.end())
               _ports.push_back(port);
-            else
-              throw std::runtime_error("Erreur de syntaxe à la ligne " + std::to_string(lineNumber) + ": port déjà utilisé");
+            else {
+			  std::stringstream message;
+			  message << "Erreur de syntaxe à la ligne " << lineNumber << ": port déjà utilisé";
+              throw std::runtime_error(message.str());
+			}
           }
         } else if (key == "server_name") {
           std::string serverName;

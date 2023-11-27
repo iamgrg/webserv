@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
+/*   By: gansard <gansard@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:01 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/27 10:08:49 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/27 13:51:16 by gansard          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+# include <fstream>
 # include "../config/Config.hpp"
 # include "../request/Request.hpp"
 # include "../response/Response.hpp"

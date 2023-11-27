@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
+/*   By: gansard <gansard@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:05 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/27 10:09:49 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/27 13:51:29 by gansard          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,7 @@ void Server::_initialize() {
 //================================================================================================// 
 void Server::_splitServerBlocks(const std::string &configPath) {
     this->_serverBlocks.clear();
-    std::ifstream configFile(configPath);
+    std::ifstream configFile(configPath.c_str());
     std::string line;
     bool insideServerBlock = false;
     std::stringstream *currentBlock = NULL;
