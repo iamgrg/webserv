@@ -6,7 +6,7 @@
 /*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:05 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/26 14:52:19 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/27 09:18:14 by gregoire         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,10 +17,28 @@ Server* Server::instance = NULL;
 Server::Server(std::string const &configPath, Config *config) : _config(*config) {
   _splitServerBlocks(configPath);
   for (std::vector<std::stringstream*>::iterator it = _serverBlocks.begin(); it != _serverBlocks.end(); ++it) {
-    Config *config = new Config(**it);
-    _configs.push_back(config);
-    Routes *route = new Routes(*config);
-    _routesS.push_back(route);
+    try {
+      bool used = false;
+      Config *config = new Config(**it);
+      for(std::vector<Config *>::const_iterator it = _configs.begin(); it != _configs.end(); ++it){
+      std::vector<int> tmp = (*it)->getPorts();
+      for(std::vector<int>::const_iterator it2 = tmp.begin(); it2 != tmp.end(); ++it2){
+        if ((std::find(config->getPorts().begin(), config->getPorts().end(), *it2) != config->getPorts().end()) 
+        && (*it)->getHost() == config->getHost()) {used = true;}
+        }
+      }
+      if(!used)
+      {
+        _configs.push_back(config);
+        Routes *route = new Routes(*config);
+        _routesS.push_back(route);
+      }
+      else
+        delete config;
+    }
+    catch(const std::exception &e){
+      std::cerr << e.what() << std::endl;
+    }
   }
   _ptrConfig = _configs[0];
   _config = *_ptrConfig;
