@@ -178,6 +178,16 @@ Response *Routes::_handleDelete(std::string const &query) {
   return res;
 }
 
+std::string removeFileExtension(const std::string& fileName) {
+    size_t lastDot = fileName.find_last_of(".");
+    if (lastDot != std::string::npos) {
+        return fileName.substr(0, lastDot);
+    } else {
+        // Aucune extension trouvée, retourner le nom du fichier tel quel
+        return fileName;
+    }
+}
+
 Response *Routes::_handleAutoindex(std::string const &directoryPath) {
   Response *res = new Response();
   DIR *dir;
@@ -196,7 +206,8 @@ Response *Routes::_handleAutoindex(std::string const &directoryPath) {
     if (fileName == "." || fileName == "..") {
       continue;
     }
-    html << "<li><a href=\"" << fileName << "\">" << fileName << "</a></li>";
+	std::string linkText = removeFileExtension(fileName);
+    html << "<li><a href=\"" << linkText << "\">" << fileName << "</a></li>";
   }
   closedir(dir);
   html << "</ul></body></html>";

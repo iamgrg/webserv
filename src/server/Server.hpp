@@ -6,7 +6,7 @@
 /*   By: gansard <gansard@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:01 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/27 13:51:16 by gansard          ###   ########.fr       */
+/*   Updated: 2023/11/27 14:27:44 by gansard          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 # include "../response/Response.hpp"
 # include "../routes/Routes.hpp"
 # include <csignal>
+# include "../location/Location.hpp"
 
 
 

@@ -223,29 +223,6 @@ bool Utils::isValidUtf8(const std::string& str) {
     return true; // Valide UTF-8 string
 }
 
-//bool isBinaryFile(const std::string& content) {
-//	if (content == "")
-//		return true;
-//	int i = 0;
-//	std::cout << content << std::endl;
-//    for (std::string::const_iterator it = content.begin(); it != content.end(); ++it) {
-//        unsigned char c = static_cast<unsigned char>(*it);
-//		std::cout << c << std::endl;
-//		if () {
-//			std::cout << "Caractère binaire détecté : " << static_cast<int>(c) << " i : "<< i << std::endl;
-//			if(std::isspace(c))
-//				std::cout << "c'est ispace" << std::endl;
-//			//if(!std::isprint(c))
-//			//	std::cout << "c'est isprint" << std::endl;
-//			return true;
-//		}
-//		i++;
-//    }
-//    return false;
-//}
-
-
-
 void Utils::uploadFile(std::string const &body, std::string const &type,
                        Response *res, std::string const &_rootPath) {
   std::string boundary = type.substr(type.find("boundary=") + 9);

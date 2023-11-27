@@ -6,7 +6,7 @@
 /*   By: gansard <gansard@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:05 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/27 13:51:29 by gansard          ###   ########.fr       */
+/*   Updated: 2023/11/27 14:39:15 by gansard          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -371,19 +371,28 @@ void Server::_sendBadRequest(int client_fd) {
 }
 //================================================================================================// 
 void Server::realStop() {
-  _isRunning = false;
-  for (std::vector<int>::iterator it = _listen_fds.begin();
-       it != _listen_fds.end(); ++it) {
-    close(*it);
-  }
-  for (std::vector<int>::iterator it = _clients.begin(); it != _clients.end();
-       ++it) {
-    close(*it);
-  }
-  for(std::vector<Routes *>::iterator it = _routesS.begin(); it != _routesS.end(); ++it)
-    delete (*it);
-  for(std::vector<Config *>::iterator it = _configs.begin(); it != _configs.end(); ++it)
-    delete (*it);
-  delete (this);
-  std::cout << std::endl << "Server clean stopped with success !" << std::endl;
+    _isRunning = false;
+    for (std::vector<int>::iterator it = _listen_fds.begin(); it != _listen_fds.end(); ++it) {
+        close(*it);
+    }
+    for (std::vector<int>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        close(*it);
+    }
+    for (std::vector<Routes *>::iterator it = _routesS.begin(); it != _routesS.end(); ++it) {
+        delete (*it);
+    }
+    _routesS.clear(); 
+    for (std::vector<Config *>::iterator it = _configs.begin(); it != _configs.end(); ++it) {
+        for (std::vector<Location *>::const_iterator it2 = (*it)->getLocations().begin(); it2 != (*it)->getLocations().end(); ++it2) {
+            delete (*it2);
+        }
+        delete (*it);
+    }
+    _configs.clear();
+    for (std::vector<std::stringstream *>::iterator it = _serverBlocks.begin(); it != _serverBlocks.end(); ++it) {
+        delete (*it);
+    }
+    _serverBlocks.clear();
+    //delete (this);
+    std::cout << std::endl << "Server clean stopped with success !" << std::endl;
 }

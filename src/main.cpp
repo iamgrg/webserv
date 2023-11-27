@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
+/*   By: gansard <gansard@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:18:27 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/27 09:30:04 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/27 14:40:58 by gansard          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ int main() {
     }
     signal(SIGINT, Server::stop);
     server->start();
+	delete server;
   } catch (const std::exception &e) {
     std::cerr << e.what() << '\n';
   }
