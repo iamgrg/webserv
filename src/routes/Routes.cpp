@@ -8,6 +8,7 @@ Routes::Routes(Config const &config)
   _macrosType["UPLOAD"] = "multipart/form-data";
   _ports = config.getPorts();
   _host = config.getHost();
+  _maxBodySize = config.getMaxBodySize();
 }
 Routes::Routes() {}
 Routes::~Routes() {}
@@ -229,3 +230,4 @@ Response *Routes::_handleError(int code) {
 
 std::vector<int> const &Routes::getPorts() const { return _ports; }
 std::string const &Routes::getHost() const { return _host; }
+int Routes::getMaxBodySize() const { return _maxBodySize; }

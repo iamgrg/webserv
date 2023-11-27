@@ -6,7 +6,7 @@
 /*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:05 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/27 09:18:14 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/27 10:09:49 by gregoire         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 Server* Server::instance = NULL;
 
-Server::Server(std::string const &configPath, Config *config) : _config(*config) {
+Server::Server(std::string const &configPath) {
   _splitServerBlocks(configPath);
   for (std::vector<std::stringstream*>::iterator it = _serverBlocks.begin(); it != _serverBlocks.end(); ++it) {
     try {
@@ -40,8 +40,6 @@ Server::Server(std::string const &configPath, Config *config) : _config(*config)
       std::cerr << e.what() << std::endl;
     }
   }
-  _ptrConfig = _configs[0];
-  _config = *_ptrConfig;
   for(std::vector<Routes *>::iterator it = _routesS.begin(); it != _routesS.end(); ++it)
   {
     std::cout << "Host : " << (*it)->getHost() << std::endl;
@@ -51,13 +49,6 @@ Server::Server(std::string const &configPath, Config *config) : _config(*config)
   instance = this;
   _initialize();
 }
-//================================================================================================//
-// Server::Server(Config *config) : _config(*config),
-// _ptrConfig(config),
-// _routes(*config){
-// 	instance = this;
-//   _initialize();
-// }
 //================================================================================================// 
 Server::~Server() {}
 //================================================================================================// 
@@ -262,18 +253,7 @@ void Server::_acceptNewConnection(int listen_fd) {
   std::cout << "Nouvelle connexion acceptée : " << client_fd << std::endl;
 }
 //================================================================================================// 
-Routes* Server::findMatchingRoute(const Request& request) {
-  std::string hostHeader = request.getHeader("Host");
-  std::string requestHost;
-  int requestPort = 80; // Utilise le port par défaut HTTP si aucun port n'est spécifié
-  // Extraire le host et le port du header Host
-  std::size_t colonPos = hostHeader.find(":");
-  if (colonPos != std::string::npos) {
-    requestHost = hostHeader.substr(0, colonPos);
-    std::istringstream(hostHeader.substr(colonPos + 1)) >> requestPort;
-  } else {
-    requestHost = hostHeader; // Si aucun port n'est spécifié, utilise le host tel quel
-  }
+Routes* Server::findMatchingRoute(std::string const &requestHost, int requestPort) {
   for (std::vector<Routes*>::const_iterator it = _routesS.begin(); it != _routesS.end(); ++it) {
     Routes* route = *it;
     if (route->getHost() == requestHost) {
@@ -288,13 +268,41 @@ Routes* Server::findMatchingRoute(const Request& request) {
   return NULL; // Aucune route correspondante trouvée
 }
 //================================================================================================//
+void Server::_extractHost(std::string const &message, int &requestPort, std::string &requestHost) {
+    // Trouver le début du header "Host"
+    std::size_t hostStart = message.find("Host:");
+    if (hostStart == std::string::npos) {
+        std::cerr << "Host header not found" << std::endl;
+        return;
+    }
+    // Trouver la fin de la ligne du header "Host"
+    std::size_t hostEnd = message.find("\r\n", hostStart);
+    std::string hostHeader = message.substr(hostStart, hostEnd - hostStart);
+    // Extraire le contenu du header "Host" (sans "Host: ")
+    hostHeader = hostHeader.substr(6); // 6 est la longueur de "Host: "
+    std::size_t colonPos = hostHeader.find(":");
+    requestPort = 80; // Port par défaut HTTP si aucun port n'est spécifié
+    if (colonPos != std::string::npos) {
+        requestHost = hostHeader.substr(0, colonPos);
+        std::istringstream(hostHeader.substr(colonPos + 1)) >> requestPort;
+    } else {
+        requestHost = hostHeader; // Si aucun port n'est spécifié, utilise le host tel quel
+    }
+}
+//================================================================================================//
 void Server::_processClientRequest(int client_fd) {
 	std::string message;
 	int bytesRead;
 	int totalBytesRead = 0;
 	int contentLength = -1; // Valeur initiale indiquant que Content-Length n'est pas encore connu
+  std::string host;
+  int requestPort;
 	bool validMethod;
   message = _readHttpRequestHeader(client_fd, validMethod, contentLength, totalBytesRead);
+  _extractHost(message, requestPort, host);
+  Routes *matchingRoute = findMatchingRoute(host, requestPort);
+  if(matchingRoute == NULL) {_sendBadRequest(client_fd); return;}
+  if(host == "") {std::cerr << "no host" << std::endl; return;}
 	while (totalBytesRead < contentLength) {
 		char buffer[1024];
 		bytesRead = recv(client_fd, buffer, sizeof(buffer), 0);
@@ -302,16 +310,13 @@ void Server::_processClientRequest(int client_fd) {
 			continue;
 		message.append(buffer, bytesRead);
 		totalBytesRead += bytesRead;
-		if(totalBytesRead > _config.getMaxBodySize()) {std::cerr << "body shaming" << std::endl; break ;}
+		if(totalBytesRead > matchingRoute->getMaxBodySize()) {std::cerr << "body shaming" << std::endl; break ;}
 	}
 	if (!validMethod) {_sendBadRequest(client_fd); return;}
-  Request request(message, this->_config.getMaxBodySize());
-  Routes* matchingRoute = findMatchingRoute(request);
-  if (matchingRoute) {
-      Response *response = matchingRoute->handle(request);
-      _responses[client_fd] = response; // Stockez la réponse pour l'envoyer plus tard
-      FD_SET(client_fd, &_writefds); // Marquez ce socket pour la surveillance de l'écriture
-  } else {_sendBadRequest(client_fd);}
+  Request request(message, matchingRoute->getMaxBodySize());
+  Response *response = matchingRoute->handle(request);
+  _responses[client_fd] = response; // Stockez la réponse pour l'envoyer plus tard
+  FD_SET(client_fd, &_writefds); // Marquez ce socket pour la surveillance de l'écriture
 }
 //================================================================================================//
 std::string Server::_readHttpRequestHeader(int client_fd, bool &validMethod, int &contentLength, int &totalBytesRead) {
@@ -375,11 +380,10 @@ void Server::realStop() {
        ++it) {
     close(*it);
   }
-  std::vector<Location *> tmp = _ptrConfig->getLocations();
-	std::vector<Location *>::iterator it;
-	for(it = tmp.begin(); it != tmp.end(); it++)
+  for(std::vector<Routes *>::iterator it = _routesS.begin(); it != _routesS.end(); ++it)
     delete (*it);
-  delete _ptrConfig;
+  for(std::vector<Config *>::iterator it = _configs.begin(); it != _configs.end(); ++it)
+    delete (*it);
   delete (this);
   std::cout << std::endl << "Server clean stopped with success !" << std::endl;
 }

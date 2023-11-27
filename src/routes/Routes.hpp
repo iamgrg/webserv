@@ -16,6 +16,7 @@ private:
   std::map<int, std::string> _errorPages;
   std::vector<int> _ports;
   std::string _host;
+  int _maxBodySize;
   Response *_handleGet(std::vector<std::string> const &filesPath, std::string const &redirectPath);
   Response *_handlePost(std::string const &body, std::string const &type);
   Response *_handleDelete(std::string const &query);
@@ -31,6 +32,7 @@ public:
   bool isHTTPMethod(std::string const &httpRequest);
   std::vector<int> const &getPorts() const;
   std::string const &getHost() const;
+  int getMaxBodySize() const;
 };
 
 #endif // ROUTES_HPP

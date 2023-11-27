@@ -6,7 +6,7 @@
 /*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:18:27 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/25 09:08:16 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/27 09:30:04 by gregoire         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,7 @@
 
 int main() {
   try {
-    Config *config = new Config();
-    Server *server = new Server("config/default.conf", config);
+    Server *server = new Server("config/default.conf");
     for(std::vector<Config *>::const_iterator it = server->getConfigs().begin(); it != server->getConfigs().end(); ++it) {
       std::cout << **it << std::endl;
     }

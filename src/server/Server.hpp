@@ -6,7 +6,7 @@
 /*   By: gregoire <gregoire@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/19 12:32:01 by gregoire          #+#    #+#             */
-/*   Updated: 2023/11/26 11:26:38 by gregoire         ###   ########.fr       */
+/*   Updated: 2023/11/27 10:08:49 by gregoire         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@
 class Server {
 public:
   // Server(Config *config);
-  Server(std::string const &configPath, Config *config);
+  Server(std::string const &configPath);
   ~Server();
   static void stop(int sgnl) {
 	(void) sgnl;
@@ -39,10 +39,7 @@ public:
 private:
   std::vector<std::stringstream *> _serverBlocks;
   std::vector<Config *> _configs;
-  Config _config;
   std::vector<Routes *> _routesS;
-  Routes _routes;
-  Config *_ptrConfig;
   std::vector<int> _listen_fds;
   bool _isRunning;
   fd_set _readfds;
@@ -59,10 +56,11 @@ private:
   void  _acceptNewConnection(int listen_fd);
   void  _handleRequests();
   void  _prepareSocketSet(int &max_fd);
-  Routes* findMatchingRoute(const Request& request);
+  Routes* findMatchingRoute(std::string const &requestHost, int requestPort);
   void _sendResponseIfReady(int client_fd);
   void _sendBadRequest(int client_fd);
   std::string _readHttpRequestHeader(int client_fd, bool &validMethod, int &contentLength, int &totalBytesRead);
+  void _extractHost(std::string const &message, int &requestPort, std::string &requestHost);
 };
 
 #endif // SERVER_HPP

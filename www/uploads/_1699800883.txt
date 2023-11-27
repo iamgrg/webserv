@@ -1,0 +1,19 @@
+
+------WebKitFormBoundaryy2F4SMp8SZQ0ghR3
+Content-Disposition: form-data; name="fileToUpload"; filename="main.cpp"
+Content-Type: application/octet-stream
+
+#include <iostream>
+
+int main(void)
+{
+
+	int * a = new int();
+	std::cout << *a << std::endl;
+}
+
+------WebKitFormBoundaryy2F4SMp8SZQ0ghR3
+Content-Disposition: form-data; name="submit"
+
+Uploader le fichier
+------WebKitFormBoundaryy2F4SMp8SZQ0ghR3--
