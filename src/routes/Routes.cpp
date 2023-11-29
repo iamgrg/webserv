@@ -65,7 +65,7 @@ Response *Routes::handle(Request const &request) {
           if (request.getUrl() == "/cgi.py")
             res = this->_handleCgi(request, "POST");
           else
-            res = this->_handlePost(request.getBody(), request.getContentType());
+            res = this->_handlePost(request.getBody(), request.getContentType(), (*it)->getPath());
           return res;
         } else if (request.getMethod() == "DELETE") {
           if (request.getQuery() != "")
@@ -111,9 +111,13 @@ Response *Routes::_handleGet(std::vector<std::string> const &filesPath, std::str
 }
 
 Response *Routes::_handlePost(std::string const &body,
-                              std::string const &type) {
+                              std::string const &type, std::string const &location) {
   Response *res = new Response();
   if (std::string::npos != type.find(_macrosType["FORM"])) {
+    if(location != "/form"){
+      res = _handleError(405);
+      return res;
+    };
     std::string name = body.substr(body.find("=") + 1);
     std::string responseBody =
         "Merci d'avoir rempli le formulaire " + name + " !";
@@ -124,8 +128,13 @@ Response *Routes::_handlePost(std::string const &body,
 	ss << res->getBody().size();
 	res->addHeader("Content-Length", ss.str());
     return res;
-  } else if (std::string::npos != type.find(_macrosType["UPLOAD"]))
-    	Utils::uploadFile(body, type, res, _rootPath);
+  } else if (std::string::npos != type.find(_macrosType["UPLOAD"])){
+    if(location != "/upload"){
+      res = _handleError(405);
+      return res;
+    };
+    Utils::uploadFile(body, type, res, _rootPath);
+  }
   else
     res = _handleError(404);
   return res;

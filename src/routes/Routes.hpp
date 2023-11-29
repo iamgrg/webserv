@@ -18,7 +18,7 @@ private:
   std::string _host;
   int _maxBodySize;
   Response *_handleGet(std::vector<std::string> const &filesPath, std::string const &redirectPath);
-  Response *_handlePost(std::string const &body, std::string const &type);
+  Response *_handlePost(std::string const &body, std::string const &type, std::string const &location);
   Response *_handleDelete(std::string const &query);
   Response *_handleCgi(Request const &request, std::string const &method);
   Response *_handleError(int code);
