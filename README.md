@@ -47,9 +47,9 @@ CGI scripting support.
 
 ## HTTP Features
 
-Methods: Handle basic HTTP methods such as GET, POST, and DELETE.
-Redirections: Support for HTTP redirections.
-File Upload: Ability to handle file uploads.
+- Methods: Handle basic HTTP methods such as GET, POST, and DELETE.
+- Redirections: Support for HTTP redirections.
+- File Upload: Ability to handle file uploads.
 
 ## Contributors
 
